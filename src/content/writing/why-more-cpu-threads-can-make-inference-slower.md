@@ -26,7 +26,7 @@ These trade-offs show up in a tensor-copy change I wrote. Two paths in that chan
 
 ### Concatenation: expose more than one task per input
 
-The old concatenation path indexed its parallel range by input tensor. It also requested a single stripe when total input size was **at or below 1,000,000 bytes**, keeping that work serial. Above that threshold, only a few inputs could still expose too few work items.
+The old concatenation path indexed its parallel range by input tensor. It also asked the scheduler for a single work unit when total input size was **at or below 1,000,000 bytes**, keeping that work serial. Above that threshold, only a few inputs could still expose too few work items.
 
 The revised path divides each input slice into chunks of up to **64 KiB** and enters its explicit parallel branch above **64 KiB**. That lowers the gate: sizes between 64 KiB and 1,000,000 bytes become eligible for parallel scheduling.
 
@@ -95,9 +95,9 @@ There’s a boundary worth noticing. **128 KiB** takes the direct route. **128 K
 
 In this implementation, worker `w` handles chunk indices `w, w + workers, ...`. Four workers can therefore copy sixteen chunks without creating sixteen threads. A production scheduler may group or distribute chunks differently.
 
-### What the original patch’s measurements establish
+### What the reported patch measurements show
 
-The public review includes baseline-versus-patch performance tests on a Ryzen x2700. Here are three CPU rows, reported as geometric-mean latency:
+The public report labels its CPU “Ryzen x2700” and mentions default CMake options, without specifying a thread count. It contains 106 rows, including 37 CPU rows. The table selects YOLOv5 and YOLOv8 because they relate to the contribution, plus AlexNet to show a regression. The [complete CPU table](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-cpu-results.csv) is available alongside these reported geometric-mean latencies:
 
 | Model | Baseline | Combined patch |
 | --- | ---: | ---: |
@@ -136,24 +136,6 @@ Real runtimes are messier. Work may be uneven, only part of an operation may be 
 
 The graph explains how a slowdown can happen. Establishing whether it happened in a particular model, and understanding why, takes measurements and profiling.
 
-### What sharing work costs on this device
-
-To put measured data next to the conceptual model, I ran a dedicated probe on the same Apple M5. It uses the same C++ pool and attention kernel, with pool widths of **1, 2, 4, 6, 8 and 10**.
-
-The first measurement dispatches **zero attention tasks**. This pool still notifies its workers, checks the task index and waits for every worker to acknowledge completion. Timing that path measures coordination without attention arithmetic. Thread creation stays outside the timer.
-
-The second measurement runs a fixed attention job: **batch 1, eight heads, one query per head, 64 keys and head dimension 64**. It exposes eight tasks. An inline run executes the same attention kernel on the caller.
-
-<figure><a class="figure-link" href="/articles/why-more-cpu-threads-can-make-inference-slower/assets/05-measured-sharing-cost.png" aria-label="Open full-size figure"><img src="/articles/why-more-cpu-threads-can-make-inference-slower/assets/05-measured-sharing-cost.png" alt="Two measured plots on Apple M5: empty-dispatch latency rises with pool width; fixed 64-key attention latency initially falls and then rises. An inline attention baseline is shown in the second panel." width="920" height="1495" loading="lazy" decoding="async" /></a><figcaption>Figure 3. Measured companion to Figure 2, from 27,000 observations in a dedicated run. Each configuration has 1,000 samples across ten shuffled rounds, with twenty warm-up calls per block. Lines connect measured medians; faint dots show individual block medians. The lower panel includes the inline median.</figcaption></figure>
-
-The empty-dispatch median rose from **4.2 μs** at one worker to **31.6 μs** at ten. The fixed attention job took **30.5 μs inline**. Its pool median fell from **33.8 μs** at one worker to **22.5 μs** at two, then reached **39.2 μs** at ten.
-
-Here, increasing the pool helped at first and eventually cost more than it saved. Two workers had the lowest pooled median among the tested widths for this shape and run.
-
-The panels measure separate operations. Empty dispatch is a control for this pool’s notification and completion path, not a component we can subtract from attention latency to recover “pure compute.” Real work changes worker participation, cache state and scheduling. Runtimes that skip empty dispatch or wake fewer workers will behave differently.
-
-The probe also tested 16-key and 2,048-key attention and retained every configuration. All attention outputs matched inline execution and an independent NumPy calculation. The expanded worker range passed an AddressSanitizer check before timing. [Probe source](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp) · [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv) · [Report](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json) · [Method and validation notes][methodology]
-
 ## A concrete example: scaled dot-product attention
 
 Let’s apply the same question to attention. For each batch item and head, the operation is:
@@ -190,25 +172,45 @@ Each worker needs its own score buffer. Query rows are independent here, but the
 
 The [complete C++ example](/articles/why-more-cpu-threads-can-make-inference-slower/examples/attention_benchmark.cpp) implements both the attention calculation and a fixed-size pool with standard-library threads, condition variables and an atomic task index. The caller waits; it does not compute an extra share of the work. No BLAS library adds hidden worker pools.
 
-### What the measured run shows
+## What sharing work costs on this device
 
-The measured host was an **Apple M5 with four performance cores and six efficiency cores**, 16 GB of memory, and macOS 26.6.2. The benchmark compares execution inline on the caller with persistent pools of **1, 2, 4 and 8 workers**. The caller waits in pool mode, so the one-worker pool still pays for dispatch and completion.
+To put measured data next to the conceptual model, I ran a dedicated probe on an Apple M5. It uses the C++ pool and attention kernel described above, with pool widths of **1, 2, 4, 6, 8 and 10**.
+
+The first measurement dispatches **zero attention tasks**. This pool still notifies its workers, checks the task index and waits for every worker to acknowledge completion. Timing that path measures coordination without attention arithmetic. Thread creation stays outside the timer.
+
+The second measurement runs a fixed attention job: **batch 1, eight heads, one query per head, 64 keys and head dimension 64**. It exposes eight tasks. An inline run executes the same attention kernel on the caller.
+
+<figure><a class="figure-link" href="/articles/why-more-cpu-threads-can-make-inference-slower/assets/05-measured-sharing-cost.png" aria-label="Open full-size figure"><img src="/articles/why-more-cpu-threads-can-make-inference-slower/assets/05-measured-sharing-cost.png" alt="Two measured plots on Apple M5: empty-dispatch latency rises with pool width; fixed 64-key attention latency initially falls and then rises. An inline attention baseline is shown in the second panel." width="920" height="1495" loading="lazy" decoding="async" /></a><figcaption>Figure 3. Measured companion to Figure 2, from 27,000 observations in a dedicated run. Each configuration has 1,000 samples across ten shuffled rounds, after at least 250 ms of warm-up per block. Lines show pooled medians; dots show block medians. Pools are recreated per block, so block shifts can dominate pooled tail statistics in the report. The lower panel includes the inline median.</figcaption></figure>
+
+The empty-dispatch median rose from **4.0 μs** at one worker to **25.9 μs** at ten. The fixed attention job took **25.1 μs inline**. Its pool median fell from **29.4 μs** at one worker to **21.5 μs** at two, then reached **33.5 μs** at ten.
+
+The useful comparison is with inline execution: **at every tested width from six workers upward, the pool median exceeded the inline median**. Two workers had the lowest pooled median among the tested widths for this shape and run.
+
+The panels measure separate operations. Empty dispatch is a control for this pool’s notification and completion path, not a component we can subtract from attention latency to recover “pure compute.” Real work changes worker participation, cache state and scheduling. Runtimes that skip empty dispatch or wake fewer workers will behave differently.
+
+The probe also tested 16-key and 2,048-key attention and retained every configuration. All attention outputs matched inline execution and an independent NumPy calculation. The expanded worker range passed separate AddressSanitizer and ThreadSanitizer checks before timing. The checks cover the exercised cases; sanitizer runs are separate from timing. [Probe source](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp) · [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv) · [Report](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json) · [Method and validation notes][methodology]
+
+## Attention across three workloads
+
+The measured host was an **Apple M5 with four performance cores and six efficiency cores**, 16 GB of memory, and macOS 26.6.2. The benchmark compares execution inline on the caller with persistent pools of **1, 2, 4 and 8 workers**. The caller waits in pool mode, so the one-worker pool still pays for dispatch and completion. Requested QoS was recorded as `USER_INTERACTIVE` for the caller and `DEFAULT` for the workers; core placement was not measured.
 
 Every case uses **batch 1, eight heads, `Dk = Dv = 64`**, and FP32 input/output storage with double-precision accumulation. Query tiles contain up to 32 rows: the two single-query cases expose eight tasks, while the prefill-shaped case exposes thirty-two.
 
-Each configuration received **20 warm-up calls before every measured block**. Ten shuffled rounds of 100 measurements produced **1,000 samples per configuration**, or **15,000 samples overall**. Inline samples time the same kernel directly; pool samples include dispatch, computation and completion, with thread creation outside the timer.
+Each configuration received **at least 250 ms of warm-up and at least twenty calls before every measured block**. Ten shuffled rounds of 100 measurements produced **1,000 samples per configuration**, or **15,000 samples overall**. Inline samples time the same kernel directly; pool samples include dispatch, computation and completion, with thread creation outside the timer.
 
-| Workload (queries × keys per head) | Inline | Pool: 1 worker | Pool: 8 workers |
+| Workload (queries × keys per head) | Inline (μs) | Pool: 1 worker (μs) | Pool: 8 workers (μs) |
 | --- | ---: | ---: | ---: |
-| Short context: 1 × 16 | 0.0049 ms | 0.0072 ms | 0.0261 ms |
-| Long context: 1 × 2,048 | 1.3028 ms | 1.3049 ms | 0.3076 ms |
-| Prefill-shaped: 128 × 128 | 7.6433 ms | 7.6030 ms | 1.5386 ms |
+| Short context: 1 × 16 | 5.4 | 7.9 | 25.6 |
+| Long context: 1 × 2,048 | 1,356.3 | 1,313.3 | 337.7 |
+| Prefill-shaped: 128 × 128 | 7,336.9 | 7,667.1 | 1,659.6 |
 
-<figure><a class="figure-link" href="/articles/why-more-cpu-threads-can-make-inference-slower/assets/04-attention-benchmark.png" aria-label="Open full-size figure"><img src="/articles/why-more-cpu-threads-can-make-inference-slower/assets/04-attention-benchmark.png" alt="Measured attention latency for inline execution and pools with one, two, four and eight workers. Bars show median latency and diamonds show estimated p95 for three attention shapes." width="914" height="1657" loading="lazy" decoding="async" /></a><figcaption>Figure 4. Measured reference-attention latency, 1,000 calls per configuration across ten shuffled rounds. Gray bars show inline execution; blue bars show pools. Diamonds show estimated p95. Each panel has its own scale.</figcaption></figure>
+<figure><a class="figure-link" href="/articles/why-more-cpu-threads-can-make-inference-slower/assets/04-attention-benchmark.png" aria-label="Open full-size figure"><img src="/articles/why-more-cpu-threads-can-make-inference-slower/assets/04-attention-benchmark.png" alt="Measured attention latency for inline execution and pools with one, two, four and eight workers. Bars show median latency and diamonds show estimated p95 for three attention shapes." width="914" height="1657" loading="lazy" decoding="async" /></a><figcaption>Figure 4. Measured reference-attention latency, 1,000 calls per configuration across ten shuffled rounds. Gray bars show inline execution; blue bars show pools. Diamonds show pooled p95; faint dots show block medians. Pools are recreated per block, so a whole slow block can dominate pooled p95. Each panel has its own scale.</figcaption></figure>
 
-For short context, the one-worker pool median was about **1.5 times** the inline median. Eight workers reached about **5.3 times** the inline median, or **3.6 times** the one-worker-pool median, adding about **19 microseconds** relative to that pool. For long context and prefill-shaped attention, eight workers provided approximately **4.2×** and **4.9×** speedups over the one-worker pool. More work per task changed the value of the same worker budget.
+The current short-context run again favors inline execution. Eight workers have a higher median even though the larger attention workloads benefit, with approximately fourfold and fivefold speedups over the one-worker pool for long context and prefill-shaped attention.
 
-**How far to take these results.** This is a scalar reference kernel on a shared desktop, with reused buffers and default OS scheduling and power management. Worker placement on performance versus efficiency cores was not recorded, and dynamic task assignment does not guarantee each worker receives a task. The run demonstrates a workload-dependent latency trade-off; identifying its causes needs profiling. The unmasked prefill-shaped case represents the attention operation only. Model projections, the rest of a Transformer and serving queueing are outside the measurement. Tail percentiles describe this run and still need replication under deployment conditions.
+Repeated measurements also put the ratios in perspective. Across the two initial runs and two time-warmed reruns of the same short-context shape, eight workers took about **4.5 to 5.3 times** the inline median. Absolute timings moved too. The qualitative result repeated, while run-to-run variation limits the precision of any single factor. The [initial reports](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-summaries.json) and [original source/data package](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-publication.zip) are retained.
+
+**How far to take these results.** This is a scalar reference kernel on a shared desktop, with reused buffers and default OS scheduling and power management. Worker placement on performance versus efficiency cores was not recorded, and dynamic task assignment does not guarantee each worker receives a task. A time-based warm-up reduces startup exposure but cannot guarantee a stationary CPU state. Pooled p95 combines variation within calls and shifts between blocks; identifying causes needs profiling. The unmasked prefill-shaped case represents the attention operation only. Model projections, the rest of a Transformer and serving queueing are outside the measurement. Tail percentiles describe this run and still need replication under deployment conditions.
 
 Outputs matched across inline execution and every worker configuration, and passed an independent NumPy attention calculation at `rtol=1e-5, atol=1e-6`. The package includes [raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-samples.csv), the [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-report.json), [environment details](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-environment.txt) and [reproduction instructions][methodology].
 
@@ -255,7 +257,7 @@ A larger pool might help one isolated request while leaving less capacity for co
 
 1. **Decide what matters.** Is it one request’s latency, throughput, or p95 latency at a defined request rate?
 2. **Record the workload.** Keep the model revision, input shape, batch size, precision, backend and build fixed.
-3. **Verify the thread control.** Check how the selected backend implements the setting. For example, the GCD backend documents support only for nonpositive thread settings; requesting four does not establish a four-worker cap. Versioned implementation details and the excluded earlier experiment are documented in the [source notes][methodology]. [Backend implementation][backend] · [API documentation][thread-control]
+3. **Verify the thread control.** Check how the selected runtime implements the setting. For example, the tensor-copy runtime’s GCD backend documents support only for nonpositive thread settings; requesting four does not establish a four-worker cap. This is a limitation of that runtime interface, not of Apple’s GCD API. [Backend implementation][backend] · [API documentation][thread-control]
 4. **Keep the timer consistent.** State whether it includes input assignment, preprocessing or execution alone. Warm up each configuration and vary the test order.
 5. **Keep the raw samples.** Repeat runs and compare the median and upper percentiles. A faster median can hide a worse tail; one noisy run can also mislead.
 6. **Test realistic traffic and check outputs.** Account for application workers and runtime pools together, and verify numerical correctness in every configuration.

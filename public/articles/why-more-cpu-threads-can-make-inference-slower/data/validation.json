@@ -1,0 +1,27 @@
+{
+  "checks": [
+    "position-dependent copy bytes at boundaries and partial tails",
+    "oversized pool rejected before accessing score scratch",
+    "257 task indices each executed exactly once",
+    "attention output equals inline for all tested widths",
+    "zero-task dispatch completes"
+  ],
+  "sanitizers": [
+    {
+      "name": "AddressSanitizer",
+      "flags": "-O1 -g -fsanitize=address -std=c++20 -pthread",
+      "exit_code": 0
+    },
+    {
+      "name": "ThreadSanitizer",
+      "flags": "-O1 -g -fsanitize=thread -std=c++20 -pthread",
+      "exit_code": 0
+    }
+  ],
+  "scope": "No sanitizer findings in exercised paths; this is not a proof for arbitrary callers or inputs. Timed executables use -O3 without sanitizer instrumentation.",
+  "sources": {
+    "check_sharing.cpp": "6779d5fb3534b7ed48906aa36c17cd71931a7a14de7d4be36fc068c9b45a5aa2",
+    "sharing_reference.hpp": "77804751171f1b41b124ee2731ec8f2ab3fa85ba1e9b77fedb4ac7f17084c5f5",
+    "copy.hpp": "814f7d7e597e5c3c38e7605ba7e344a23f4e8a384e7edc788296b2362b52c47b"
+  }
+}

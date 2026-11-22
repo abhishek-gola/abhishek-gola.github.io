@@ -104,7 +104,7 @@ fig.text(.04, .965, 'Attention: measured CPU latency', fontsize=18, weight='bold
 fig.text(.04, .925, 'Inline vs pools • 1,000 calls per setting', fontsize=13)
 from matplotlib.lines import Line2D
 fig.legend(handles=[Rectangle((0,0),1,1,color=BLUE,label='Median'),
-                    Line2D([0],[0],color=ORANGE,marker='D',linestyle='None',label='Estimated p95')],
+                    Line2D([0],[0],color=ORANGE,marker='D',linestyle='None',label='Pooled p95')],
            loc='upper left',bbox_to_anchor=(.02,.91),ncol=2,frameon=False,fontsize=14)
 for ax, (name, title) in zip(axes, [
         ('short-context','Short context: 1 query × 16 keys'),
@@ -117,19 +117,22 @@ for ax, (name, title) in zip(axes, [
         assert len(measured)==1000
         np.testing.assert_allclose([np.median(measured),np.percentile(measured,95)],
                                    [row['median_ms'],row['p95_ms']],rtol=1e-12)
+    scale=1000 if name=='short-context' else 1
     x=np.arange(5)
-    ax.bar(x,[r['median_ms'] for r in rows],color=[MUTED,BLUE,BLUE,BLUE,BLUE],width=.58,zorder=3)
-    ax.scatter(x,[r['p95_ms'] for r in rows],color=ORANGE,marker='D',s=45,zorder=4)
+    ax.bar(x,[r['median_ms']*scale for r in rows],color=[MUTED,BLUE,BLUE,BLUE,BLUE],width=.58,zorder=3)
+    ax.scatter(x,[r['p95_ms']*scale for r in rows],color=ORANGE,marker='D',s=45,zorder=4)
+    for i,row in enumerate(rows):
+        ax.scatter(i+np.linspace(-.12,.12,10),np.array(row['round_median_ms'])*scale,color=INK,alpha=.22,s=16,zorder=4)
     ax.set_title(title,fontsize=14,weight='bold',loc='left',pad=12)
     ax.set_xticks(x,['Inline','1','2','4','8'])
-    ax.set_ylabel('Latency (ms)',fontsize=14)
+    ax.set_ylabel('Latency (μs)' if scale==1000 else 'Latency (ms)',fontsize=14)
     ax.set_xlabel('Execution: inline or pool workers',fontsize=12)
     ax.set_ylim(bottom=0)
     ax.spines[['top','right']].set_visible(False)
     ax.grid(axis='y',color=LINE,zorder=0)
     ax.set_axisbelow(True)
     ax.tick_params(labelsize=13)
-fig.text(.04,.035,'Gray: inline • blue: pool • separate scales',fontsize=13,color=MUTED)
+fig.text(.04,.035,'Faint dots: block medians • separate scales',fontsize=13,color=MUTED)
 save(fig,'04-attention-benchmark')
 print('Generated measured attention benchmark graph.')
 

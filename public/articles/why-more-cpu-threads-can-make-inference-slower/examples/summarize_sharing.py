@@ -46,7 +46,7 @@ for workload in ['empty-dispatch','keys-16','keys-64','keys-2048']:
                           'median_us':float(np.median(values)),
                           'p95_us':float(np.percentile(values,95)),
                           'round_median_us':[float(np.median([float(r['us']) for r in rows if int(r['round'])==a])) for a in range(10)]})
-report={'rounds':10,'observations_per_block':100,'warmups_per_block':20,
+report={'rounds':10,'observations_per_block':100,'minimum_warmup_calls':20,'minimum_warmup_ms_per_block':250,
         'scope':'empty-dispatch control and total attention latency, measured separately',
         'interpretation':'empty dispatch is a separate control, not an additive component inferred from attention latency',
         'source_sha256':{name:hashlib.sha256((ROOT/'examples'/name).read_bytes()).hexdigest() for name in ['sharing_benchmark.cpp','sharing_reference.hpp','check_sharing.cpp']},

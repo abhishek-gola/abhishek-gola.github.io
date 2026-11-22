@@ -1,106 +1,103 @@
-The article combines code-derived examples, an arbitrary cost model and new reference-attention measurements. Figure 1 explains copy partitioning, Figure 2 is conceptual, Figure 3 measures sharing costs on this device, Figure 4 contains the earlier attention sweep and Figure 5 illustrates serving topology.
+The article has five figures: copy partitioning, a conceptual cost model, a measured sharing-cost probe, a three-workload attention sweep and a serving-topology diagram. Current measurements use a time-based warm-up. Initial published runs remain available for comparison.
 
-## Original implementation and historical results
+## Implementation sources and reported patch results
 
-Abhishek Gola authored [OpenCV PR #28821](https://github.com/opencv/opencv/pull/28821), merged into 5.x as [d95badefa42cc24b6feaba3f4e7cdf469727a6ae](https://github.com/opencv/opencv/commit/d95badefa42cc24b6feaba3f4e7cdf469727a6ae). The article keeps the project name out of its prose while retaining attribution in references. Implementation links are pinned to the merge commit.
+Abhishek Gola authored [OpenCV PR #28821](https://github.com/opencv/opencv/pull/28821), merged into 5.x as [d95badefa42cc24b6feaba3f4e7cdf469727a6ae](https://github.com/opencv/opencv/commit/d95badefa42cc24b6feaba3f4e7cdf469727a6ae).
 
-- **Concatenation**, `modules/dnn/src/layers/concat2_layer.cpp`: the old range was indexed by input, with `nstripes = totalSize > 1000000 ? ninputs : 1`. At or below 1,000,000 bytes, the one-stripe path executes serially. The revision uses chunks of up to 64 × 1024 bytes per input slice and enters its explicit parallel branch when `totalSize > CHUNK && totalChunks > 0`. For valid nonempty inputs, the positive chunk-count guard adds no useful prose qualification. Eligibility therefore expands to the interval above 64 KiB and at or below 1,000,000 bytes. Chunks cannot cross slice boundaries, so inner-axis concatenation may expose many tiny tasks.
-- **Contiguous copying**, `modules/dnn/src/layers/layers_common.cpp`, `reshapeAndCopyFirst`: for distinct buffers, the revision asserts continuity and explicitly schedules chunks only when `bytes > 2 * CHUNK_BYTES`, where `CHUNK_BYTES = 64 * 1024`. Otherwise it retains `copyTo`. This cutoff is strictly above 128 KiB. It says nothing about all underlying copy routines’ internal threading.
-- **Scope:** split uses `(slice, output)` tasks and removes its former size-based one-stripe setting. Transpose introduces an outer-range parallel loop without an explicit byte-size cutoff at the call site. Scheduler behavior can still constrain execution. These paths require separate analysis.
+- **Concatenation**, `modules/dnn/src/layers/concat2_layer.cpp`: the old parallel range was indexed by input. Its `nstripes = totalSize > 1000000 ? ninputs : 1` requested a single work unit at or below 1,000,000 bytes, resulting in serial execution. The revision partitions each input slice into chunks of up to 64 KiB and enters its explicit parallel branch above 64 KiB. Chunks stop at slice boundaries, so inner-axis concatenation can expose many small tasks.
+- **Contiguous copying**, `reshapeAndCopyFirst` in `layers_common.cpp`: distinct contiguous buffers use explicit chunk scheduling above 128 KiB, with chunks of up to 64 KiB. Smaller buffers retain `copyTo`.
+- **Other paths:** split changes to `(slice, output)` tasks and removes its old size-based single-work-unit setting. Transpose introduces an outer-range parallel loop without a byte-size gate at the call site. Those changes are outside the article's copy example.
 
-The article describes why finer partitioning can expose more parallel work. It does not claim the new gates were proved optimal. A 1 MiB contiguous buffer gives 16 chunks; a 128 KiB + 1 byte buffer gives three, with a one-byte tail. These are arithmetic consequences of the branch and ceiling division.
+The [maintainer's report](https://github.com/opencv/opencv/pull/28821#issuecomment-4294666478) labels the host “Ryzen x2700” and says “default cmake options.” It contains 106 rows, including 37 CPU rows. The thread count is not specified. The label is retained rather than interpreted as a particular Ryzen model.
 
-The historical table transcribes three CPU rows from the maintainer’s Ryzen x2700 baseline-versus-patch report in the [PR discussion](https://github.com/opencv/opencv/pull/28821). Units are milliseconds, reported as geometric means, with default CMake options. AlexNet is 11.633 → 11.967, YOLOv5 is 37.554 → 31.078, and YOLOv8 is 50.080 → 45.075. These are reported combined-patch results, including a regression, rather than newly collected measurements, a copy-only ablation or a thread sweep. The PR description’s cross-engine table is a different comparison and is not used as before/after evidence.
+The article selects YOLOv5 and YOLOv8 for relevance to the contribution, plus AlexNet to include a regression. [All 37 CPU rows](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-cpu-results.csv) and [source metadata](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-source.json) are supplied. The values are reported geometric-mean milliseconds for the combined patch. They do not isolate a particular layer change or constitute a thread-count sweep.
 
-## Standalone copy code
+## Standalone C++ and correctness checks
 
-The article’s code matches [examples/copy.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/copy.hpp), apart from its include guard. It is a standalone C++20 adaptation using `std::jthread`, static chunk-index assignment and `std::memcpy`. Thread lifetimes and automatic joining are documented in the [C++20-era N4861 draft](https://timsong-cpp.github.io/cppwp/n4861/thread.jthread.class).
+[examples/copy.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/copy.hpp) uses standard C++20 `std::jthread` and `std::memcpy`. Each worker handles disjoint chunk indices. It creates threads per call, with automatic joining described in the [N4861 draft](https://timsong-cpp.github.io/cppwp/n4861/thread.jthread.class). Its inherited 128 KiB gate illustrates the branch; a useful cutoff for fresh threads would require measurement.
 
-This version creates threads per call. The article warns about that before the code listing and retains the inherited 128 KiB cutoff only to explain the branch. A cutoff for newly created threads would need separate measurement. The copy example’s performance is not used in Figures 3 or 4.
+[examples/check_sharing.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/check_sharing.cpp) covers:
 
-Buffers must be valid, non-overlapping and contiguous, with external concurrent access controlled. Zero bytes return immediately; budgets of zero or one use the serial route. The companion checks zero bytes, exactly 128 KiB, 128 KiB + 1 byte and 1 MiB + 1 byte at budgets of zero, one, four and eight.
+- Copy sizes zero, exactly 128 KiB, 128 KiB + 1 byte and 1 MiB + 1 byte, with zero, one, four and eight requested workers. Source bytes use `i % 251`, so common wrong-offset copies produce different results. The destination begins with a different sentinel value.
+- Rejection of a pool wider than the attention kernel's score-scratch allocation. `Attention::run(Pool&)` checks this before dispatch.
+- Exactly-once execution of 257 task indices, empty dispatch completion and attention agreement with inline execution across one, two, four, six, eight and ten workers.
 
-## Figure 3: dedicated sharing-cost probe
+Separate AddressSanitizer and ThreadSanitizer builds passed these checks. AddressSanitizer checks memory accesses; ThreadSanitizer detects races in exercised execution paths. Neither is a proof for arbitrary callers or inputs. [Validation details and source hashes](/articles/why-more-cpu-threads-can-make-inference-slower/data/validation.json) record the tested code. Sanitizer binaries are never used for performance measurements.
 
-### What is measured
+## Attention kernel
 
-[examples/sharing_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp) measures an empty-dispatch control and three fixed attention shapes. It uses [examples/sharing_reference.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_reference.hpp), a snapshot of the pool and attention classes from the earlier benchmark. The summarizer verifies that the snapshot matches the original definitions. This leaves the earlier run and its source hashes unchanged.
+The kernel evaluates [scaled dot-product attention](https://arxiv.org/html/1706.03762v7#S3.SS2.SSS1), with batch one, eight heads, `Dk = Dv = 64`, unmasked inputs and no dropout. Inputs and outputs use FP32 storage; dot products and output sums accumulate in double precision. Stable softmax subtracts the maximum score over the complete key dimension.
 
-The probe tests widths one, two, four, six, eight and ten. Its attention jobs use batch one, eight heads, one query per head, key/value dimensions of 64 and key counts 16, 64 or 2,048. Each shape exposes eight tasks. Ten score-scratch buffers are preallocated before warm-up, extending the earlier example's eight-buffer capacity for the larger worker range. Worker participation is determined by dynamic task assignment.
+Each task owns a query tile within a head, and each worker owns a score buffer. Key tiling requires consistent normalization statistics, as in [online-softmax attention](https://arxiv.org/html/2205.14135v2#S3.SS1). The reference uses scalar loops, including strided value reads and per-term normalization in the output loop. It retains that loop order across these comparisons; optimized blocking, vectorization and normalization hoisting can change its timings.
 
-The empty-dispatch control calls `Pool::run` with zero tasks. This implementation still notifies all configured workers, performs atomic task-index checks and waits for every worker's completion acknowledgment. That is the measured notification/completion path, with no attention arithmetic and no thread creation inside the timer. It is specific to this pool: a scheduler that short-circuits empty work or activates fewer workers has a different control path.
+The pool uses condition variables, an atomic task index and a completion acknowledgment from every configured worker. Inline mode executes the same task kernel on the caller. Pool mode leaves the caller waiting. Inputs, outputs and score scratch are preallocated and reused; no BLAS pool is involved.
 
-The attention measurements time the complete operation, including pool dispatch and completion. The inline reference calls the same attention task kernel sequentially. An empty-dispatch latency cannot be subtracted from an attention latency to identify compute time: the two operations can have different worker timing, cache state, scheduling and contention. Figure 3 therefore uses separate panels rather than an additive cost breakdown.
+## Current measurement procedure
 
-### Procedure and validation
+Both current runs were collected on 22 November 2026 on an Apple M5 with four performance and six efficiency cores, 16 GB memory, macOS 26.6.2 (25G83), arm64. Apple LLVM 21.0.0 compiled the timed executables with `-O3 -std=c++20 -pthread`.
 
-All twenty-seven configurations are specified before timing: six empty-dispatch widths, plus seven execution configurations for each of the three attention shapes, including inline. Their order is shuffled across all workloads within each of ten rounds, with seed `20261123`. Every block gets twenty warm-up calls and one hundred individually timed observations. There are one thousand observations per configuration and twenty-seven thousand overall. Timing uses `steady_clock` with microsecond reporting. Pool creation, tensor/scratch allocation, validation and CSV output remain outside the timer.
+Each configuration has ten blocks of one hundred timed calls. Before **every block**, warm-up runs for at least **250 milliseconds and twenty calls**. This replaces the initial runs' call-count-only warm-up. All observations are retained. Warm-up reduces startup exposure but does not guarantee stationary clocks, thermal state or scheduling.
 
-The host is the same Apple M5, four performance plus six efficiency cores, 16 GB memory, macOS 26.6.2, built with Apple LLVM 21.0.0 and `-O3 -std=c++20 -pthread`. Default scheduling and power management remain in effect on a shared desktop. Per-core placement and CPU frequency are not recorded. This dedicated run is separate from the earlier fifteen-thousand-sample attention sweep, so its samples are not pooled with that run.
+Pools are recreated outside timing for each block, then reused through warm-up and measurement. That design exposes variation between pool instances and placements. `steady_clock` measures each call. Pool creation, tensor/scratch allocation, output validation and CSV writes are outside timing. Dispatch and completion are inside pool timing; inline timing covers the direct kernel. Pool bookkeeping is included.
 
-Before the retained run, [examples/check_sharing.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/check_sharing.cpp) exercised all three shapes at every worker width, with twenty repetitions each, under AddressSanitizer. It checked attention output agreement and the empty-dispatch path. The check passed. An initial probe attempt exposed the eight-slot scratch limit at ten workers; after extending the probe's scratch allocation, the complete benchmark was rerun from the start. Only the completed corrected run is included.
+The desktop is shared, with default scheduling and power management. No QoS class is assigned by the benchmark. `pthread_get_qos_class_np` records requested classes: the caller reported `USER_INTERACTIVE` (33), and workers reported `DEFAULT` (21), in both current runs. These values are defined in the macOS SDK's `sys/qos.h`. Worker inheritance is not assumed. Requested QoS does not identify the physical core used; effective priority, frequency and core placement were not traced.
 
-Every timed attention result is checked against inline output after stopping the timer. [examples/summarize_sharing.py](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_sharing.py) also regenerates Q/K/V and independently evaluates attention using float64 NumPy reductions. All outputs must be finite and match at `rtol=1e-5, atol=1e-6`. It validates all twenty-seven round/sample grids and summarizes medians, estimated p95 and block medians.
+### Figure 3: sharing-cost probe
 
-- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv).
-- [Summary, validation results and source hashes](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json).
-- [Compiler, host and procedure](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-environment.txt).
-- Reference outputs: [16 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-16-output.txt), [64 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-64-output.txt), [2,048 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-2048-output.txt).
+[examples/sharing_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp) uses the pool and kernel snapshot in [examples/sharing_reference.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_reference.hpp). The summarizer verifies it against the definitions in the attention source. Ten score buffers support the probe's maximum width of ten.
 
-Figure 3 plots pooled medians for empty dispatch and the 64-key attention job. Faint dots show ten block medians per pool width. The dashed line in the attention panel is its measured inline median. Connected lines guide the eye between tested widths; the faint dots are observed block summaries, not confidence intervals. The figure script recomputes median/p95 from the raw CSV and verifies the summary before plotting. The article's numbers are rounded from that report. The other two attention shapes remain in the raw data and report.
+The 27 configurations comprise:
 
-This probe demonstrates a dispatch-cost increase and a workload-dependent turnaround in this pool on this device. It does not identify the best width for a production runtime or separate the causes of every latency difference. The broader kernel and host limitations listed for Figure 4 also apply.
+- Empty dispatch at one, two, four, six, eight and ten workers.
+- Attention with 16, 64 or 2,048 keys, each executed inline and at those six pool widths. All have one query per head and eight tasks.
 
-## Figure 4: measured attention example
+All configurations are shuffled together within each round, using seed `20261123`. The complete run has 27,000 timed observations.
 
-### Operation and numerical checks
+Empty dispatch calls this pool with zero tasks. Workers still receive notification, check the task index and acknowledge completion. It measures this implementation's coordination path without attention arithmetic. Schedulers that skip empty work have a different path. The attention panel measures a complete operation; the empty-dispatch time cannot be subtracted from it to identify compute time because work changes scheduling, cache state and participation.
 
-The attention definition follows [Attention Is All You Need, section 3.2.1](https://arxiv.org/html/1706.03762v7#S3.SS2.SSS1). Each query row computes scaled dot products over every key, stable softmax and the weighted value sum. Tasks own disjoint output rows and each worker has separate score scratch. Key tiling needs consistent normalization statistics; [FlashAttention](https://arxiv.org/html/2205.14135v2#S3.SS1) describes a correct online-softmax approach.
+Figure 3 shows pooled medians for empty dispatch and 64-key attention. Faint dots show ten block medians. Its dashed baseline is the measured inline median. Lines connect tested widths only. The other shapes remain in the report and raw samples.
 
-All cases use batch one, eight heads, `Dk = Dv = 64`, finite deterministic inputs, unmasked attention and no dropout. Storage is FP32 with double-precision dot-product/output accumulation. Inputs, outputs and per-worker scratch are preallocated and reused. Scratch holds one row per worker, rather than a full score matrix.
+- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-environment.txt).
+- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_sharing.py).
+- Reference vectors: [16 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-16-output.txt), [64 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-64-output.txt), [2,048 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-2048-output.txt).
 
-| Case | Query rows | Keys | Query tile | Tasks |
+### Figure 4: attention sweep
+
+[examples/attention_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/attention_benchmark.cpp) tests these shapes:
+
+| Case | Queries | Keys | Query tile | Tasks |
 | --- | ---: | ---: | ---: | ---: |
 | Short context | 1 | 16 | 32 | 8 |
 | Long context | 1 | 2,048 | 32 | 8 |
 | Prefill-shaped | 128 | 128 | 32 | 32 |
 
-[examples/attention_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/attention_benchmark.cpp) contains the complete kernel and persistent pool. Inline mode calls the same task kernel sequentially on the caller. Pool mode uses exactly one, two, four or eight standard-library background workers, condition variables and an atomic task index. The caller waits. There are no BLAS worker pools underneath the kernel. Tasks are dynamically assigned; available tasks do not guarantee every worker participates in useful computation on each call.
+Each shape runs inline and in pools of one, two, four and eight workers. Configuration order is shuffled within each workload, with seed `20261122`; workload order is fixed. The run has 15,000 timed observations. CSV `workers=0` means inline execution with no pool.
 
-C++ checks exact output agreement against inline execution after every measured call. [examples/summarize_attention.py](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_attention.py) independently regenerates Q/K/V and evaluates float64 attention with NumPy reductions. All outputs must be finite and match at `rtol=1e-5, atol=1e-6`. These checks establish numerical agreement for the included shapes, not optimized-kernel equivalence across arbitrary inputs.
+Figure 4 bars show pooled medians, diamonds show pooled p95 and faint dots show block medians. The short-context panel uses microseconds; the other panels use milliseconds, with separate scales.
 
-### Sampling, timing and host
+- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-samples.csv), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-report.json), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-environment.txt).
+- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_attention.py).
+- Reference vectors: [short context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-short-context-output.txt), [long context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-long-context-output.txt), [prefill-shaped](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-prefill-output.txt).
 
-The saved run was collected on 22 November 2026. For each workload, ten rounds shuffle `[inline, pool-1, pool-2, pool-4, pool-8]` with a seeded generator. Every block gets twenty warm-up calls and one hundred measured calls. That is one thousand observations per configuration and fifteen thousand overall. Workload order is fixed; configuration order is shuffled within each workload.
+Both C++ programs compare every timed attention result against inline output after timing. Both Python summarizers independently regenerate the inputs and evaluate float64 attention with NumPy reductions. All outputs must be finite and match at `rtol=1e-5, atol=1e-6`. They validate sample grids and numerical agreement, and record source hashes. The plotting script independently checks medians and p95 against raw samples.
 
-`workers=0` in the CSV explicitly encodes inline execution with no pool. Inline timing covers direct kernel execution. Pool timing covers dispatch, attention and completion using `std::chrono::steady_clock`. Thread construction/destruction and tensor/scratch allocation are outside the timer. Pool dispatch includes its function-wrapper bookkeeping. Output comparisons and CSV writes also occur after timing. Q/K/V projection, preprocessing, the remaining model and serving queueing are excluded.
+## Block effects and repeated runs
 
-The host was an Apple M5 with ten cores (four performance, six efficiency), 16 GB memory and macOS 26.6.2 (25G83), arm64. The chip and core split were verified using `system_profiler`. Build flags were `-O3 -std=c++20 -pthread`, using Apple LLVM 21.0.0. The standard library reported a hardware-concurrency hint of ten.
+Pooled p95 combines within-block variation with shifts between blocks. Since each block is ten percent of a configuration's samples, one uniformly slow block can determine its 95th percentile. Pool recreation, the caller's state and system activity can move a whole block. These data alone do not identify a cause.
 
-The desktop was shared, with default OS scheduling and power management. Worker-to-core placement and CPU frequency were not recorded. Core heterogeneity can affect scaling, but the data do not attribute a particular difference to performance or efficiency cores. macOS scheduling policy is left to the OS; no claim of hard per-core pinning is made. The ten blocks are within one run, not ten isolated machine-level replications.
+In the initial attention run, short-context inline round zero had a median near 11.8 μs, versus approximately 4.9 μs later. The initial one-worker pool's first block was near 19.8 μs, versus roughly 7 μs later. Those blocks largely determine the corresponding pooled p95 values. A steady slow block does not establish whether a core type, clock state or another mechanism caused it.
 
-### Data and reporting
+Time-based warm-up does not eliminate the issue. In the current sharing run, one 64-key, one-worker block has a median near 65.2 μs while the other block medians range from about 28.0 to 30.9 μs; pooled p95 is about 65.9 μs. The block dots and retained samples make that state shift visible rather than filtering it out. Pooled p95 is not a steady-state per-call latency guarantee or a confidence interval.
 
-- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-samples.csv), with workload, worker encoding, round and sample indices.
-- [Summary report](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-report.json), with pooled median/p95, round medians, numerical errors and source hashes.
-- [Environment](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-environment.txt).
-- Saved reference outputs: [short context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-short-context-output.txt), [long context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-long-context-output.txt), [prefill-shaped](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-prefill-output.txt).
+The sharing probe repeats the short- and long-context shapes in the attention sweep. In the initial runs, 16-key inline medians were about 4.9 and 6.3 μs, while 2,048-key inline medians were about 1.30 and 1.54 ms. Qualitative scaling repeated, but absolute times and ratios changed. Current reruns preserve that distinction between replication of a qualitative result and precise deployment estimates.
 
-Figure 4 recomputes medians and p95 from the CSV and checks them against the report. Gray bars show inline execution; blue bars show pools. Diamonds show estimated p95, and panels have separate scales. Values are descriptive summaries with no confidence intervals. The larger sample count improves percentile resolution but does not remove correlation, scheduling noise or the need for repeated deployment-level experiments.
+The [initial summaries](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-summaries.json) and [initial published package](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-publication.zip) retain all earlier reports, raw samples and the exact source used for those timings. Current reports identify the revised sources. Samples from different runs are never pooled. The article's observed ratio range covers the two initial runs and two current reruns; it is an observed range, not a statistical uncertainty interval.
 
-Ratios in the article use unrounded medians and are rounded to one decimal place. The inline baseline and one-worker pool are distinct. The kernel is a scalar teaching example; a production attention implementation can have different blocking, vectorization, precision and scheduling costs. The unmasked prefill-shaped case is not a full causal prefill pipeline.
+## Other figures and runtime references
 
-## Excluded earlier runtime benchmark
+Figure 1 illustrates code-derived partitioning: 1 MiB gives sixteen 64 KiB chunks; 128 KiB + 1 byte gives three, with a one-byte tail. Tasks and thread counts are separate quantities.
 
-An earlier draft contained a separate OpenCV 4.12.0 experiment with requested budgets one and four on the GCD backend. The [4.12.0 source](https://github.com/opencv/opencv/blob/4.12.0/modules/core/src/parallel.cpp) stores the setting but does not configure a four-worker GCD cap. A value of one bypasses its native parallel branch; `getNumThreads` reports CPU count for GCD rather than measuring active workers.
-
-That older experiment is excluded from the article package because it does not establish a controlled one-versus-four-worker comparison. The replacement C++ attention benchmark has explicit pool widths. The original experiment remains in the speaking-demo workspace.
-
-The main article’s backend implementation link is pinned to the contribution’s merge commit; the excluded experiment’s link intentionally stays at 4.12.0. The [4.13.0 API documentation](https://docs.opencv.org/4.13.0/db/de0/group__core__utils.html) describes GCD support as nonpositive settings only. Backend details must be checked against the actual build and version, rather than inferred from a setter or getter name.
-
-## Conceptual figures and general references
-
-Figure 2 uses arbitrary functions for hypothetical worker count `P` from one to sixteen:
+Figure 2 uses arbitrary functions, unrelated to measured data:
 
 ```text
 divisible_work(P) = 0.4 / P
@@ -108,44 +105,38 @@ coordination(P)   = 0.025 × (P − 1)
 combined_cost(P)  = divisible_work(P) + coordination(P)
 ```
 
-The constants are unrelated to the measured attention data. The model assumes perfectly divisible work and linear coordination cost, omitting serial and extra memory-contention terms from the article’s broader bookkeeping equation. Its continuous curves and turning point have no hardware significance. The article’s inequality follows by subtracting two approximate costs with unchanged workload and serial work.
+The broader cost equation includes serial and memory-contention terms. Subtracting two approximate costs with unchanged serial work yields the article's inequality. The conceptual turning point has no hardware significance.
 
-Figure 5 depicts independent serving workers with their own pools. Shared-pool designs can differ, and configured capacity does not establish simultaneous execution.
+Figure 5 depicts independent serving workers with their own pools. Shared-pool implementations can behave differently.
 
-The [STREAM reference](https://www.cs.virginia.edu/stream/ref.html) supports `2N/t` effective-copy-bandwidth accounting and distinguishes requested traffic from hardware traffic. No STREAM results are reported. [ONNX Runtime threading](https://onnxruntime.ai/docs/performance/tune-performance/threading.html) and [profiling](https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html) pages supply general documentation examples, separate from the original contribution and the standard-library benchmark. The Python timing helper is an independent serial measurement utility with illustrative defaults.
+The [STREAM reference](https://www.cs.virginia.edu/stream/ref.html) explains read-plus-write effective bandwidth accounting. [ONNX Runtime threading](https://onnxruntime.ai/docs/performance/tune-performance/threading.html) and [profiling](https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html) pages supply general examples. The source runtime's [GCD thread-setting documentation](https://docs.opencv.org/4.13.0/db/de0/group__core__utils.html) concerns its own interface, rather than a limit on Apple's GCD API. Backend behavior must be checked for the actual runtime version and build.
 
-## Reproduction and publication packaging
+## Reproduction
 
-Use a C++20 compiler/library supporting `std::jthread`, and Python 3.9 or later. On macOS or Linux, from this directory:
+Run these commands from the **unzipped package directory**, `why-more-cpu-threads-can-make-inference-slower`. Use Python 3.9 or later and a C++20 compiler/library with `std::jthread`. On macOS or Linux:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-
-# Optional: collect a NEW run, replacing the saved attention measurements.
-# Omit the next three commands to retain the article's saved run.
 build_dir=$(mktemp -d)
-c++ -O3 -std=c++20 -pthread examples/attention_benchmark.cpp -o "$build_dir/attention_benchmark"
-"$build_dir/attention_benchmark" data
+
+# Correctness diagnostics: run separately from timing.
+c++ -O1 -g -fsanitize=address -std=c++20 -pthread examples/check_sharing.cpp -o "$build_dir/check_asan"
+"$build_dir/check_asan"
+c++ -O1 -g -fsanitize=thread -std=c++20 -pthread examples/check_sharing.cpp -o "$build_dir/check_tsan"
+"$build_dir/check_tsan"
+
+# Optional: these replace the CURRENT saved measurements with new runs.
+c++ -O3 -std=c++20 -pthread examples/attention_benchmark.cpp -o "$build_dir/attention"
+"$build_dir/attention" data
+c++ -O3 -std=c++20 -pthread examples/sharing_benchmark.cpp -o "$build_dir/sharing"
+"$build_dir/sharing" data
 
 .venv/bin/python examples/summarize_attention.py
-.venv/bin/python figures.py
-```
-
-To reproduce the sharing-cost probe separately, retaining the earlier attention measurements:
-
-```sh
-build_dir=$(mktemp -d)
-c++ -O1 -g -fsanitize=address -std=c++20 -pthread examples/check_sharing.cpp -o "$build_dir/check_sharing"
-"$build_dir/check_sharing"
-c++ -O3 -std=c++20 -pthread examples/sharing_benchmark.cpp -o "$build_dir/sharing_benchmark"
-"$build_dir/sharing_benchmark" data
 .venv/bin/python examples/summarize_sharing.py
 .venv/bin/python figures.py
 ```
 
-The sanitizer executable checks correctness only; timings come from the optimized executable without sanitizer instrumentation. The sharing probe writes its own `sharing-*` data files. To regenerate all figures from saved data, run both summarizers and `figures.py`, without either C++ timing command.
+To retain the supplied measurements, omit the two optimized compilation/execution pairs. Run only the summarizers and figure script to regenerate plots from saved data. Sanitizer support varies by platform; the supplied validation was performed on this Mac. QoS recording is macOS-specific and reports unavailable elsewhere.
 
-A new benchmark run replaces the CSV, reference vectors and basic metadata. Add the host OS/hardware and build flags to the corresponding environment text file, then update the article’s table and interpretation from the new report. Keep new measurements separate from old numeric claims.
-
-The figures script writes PNG/SVG versions of all five figures. Dependencies are pinned in `requirements.txt`; SVG text remains editable. The Markdown uses local images and links, so distribute the entire folder or ZIP to retain them. For a standalone blog platform, upload the assets and supporting package and replace local links with that platform’s final URLs. The website version resolves supporting links for browser use.
+After collecting a new run, record its host, compiler flags and conditions in the corresponding environment file and update article values from the new reports. The original archive remains separate. PNG and editable SVG versions of all five figures are generated. Keep the whole folder together for relative links, or use the published article and hosted supporting files.

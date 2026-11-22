@@ -1,4 +1,4 @@
-// Snapshot of the existing benchmark pool and attention kernel.
+// Snapshot of the benchmark pool and attention kernel.
 #pragma once
 // C++20, standard library only. Correctness-oriented CPU attention example.
 #include <algorithm>
@@ -19,6 +19,26 @@
 #include <thread>
 #include <vector>
 #include "copy.hpp"
+#ifdef __APPLE__
+#include <pthread/qos.h>
+#endif
+
+inline int requested_qos() {
+#ifdef __APPLE__
+    qos_class_t value; int priority=0;
+    if (pthread_get_qos_class_np(pthread_self(), &value, &priority)==0)
+        return static_cast<int>(value);
+#endif
+    return -1;
+}
+
+template<class Run>
+void warm_up(Run&& run) {
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::milliseconds(250);
+    std::size_t calls=0;
+    do { run(); ++calls; }
+    while (calls<20 || std::chrono::steady_clock::now()<deadline);
+}
 
 // Fixed background-worker count; the calling thread waits rather than computes.
 // run() calls must not overlap; task functions must not throw.
@@ -30,12 +50,14 @@ class Pool {
     std::atomic<std::size_t> next_{0};
     std::function<void(std::size_t, std::size_t)> job_;
     std::vector<std::jthread> threads_;
+    std::vector<int> qos_;
 public:
-    explicit Pool(std::size_t workers) {
+    explicit Pool(std::size_t workers) : qos_(workers,-1) {
         if (!workers) throw std::invalid_argument("workers must be positive");
         try {
             for (std::size_t w = 0; w < workers; ++w) {
                 threads_.emplace_back([this, w] {
+                    qos_[w]=requested_qos();
                     std::size_t seen = 0;
                     for (;;) {
                         std::unique_lock lock(mutex_);
@@ -59,6 +81,12 @@ public:
             threads_.clear();
             throw;
         }
+    }
+    std::size_t size() const { return threads_.size(); }
+    void record_qos(std::ostream& out) const {
+        out << "worker_requested_qos:";
+        for (int value : qos_) out << ' ' << value;
+        out << '\n';
     }
     void run(std::size_t tasks,
              const std::function<void(std::size_t, std::size_t)>& job) {
@@ -124,6 +152,8 @@ struct Attention {
         for (std::size_t t=0; t<tasks(); ++t) task(t,0);
     }
     void run(Pool& pool) {
+        if (pool.size()>scratch.size())
+            throw std::invalid_argument("pool width exceeds score-scratch slots");
         pool.run(tasks(),[this](auto task_id, auto worker) { task(task_id,worker); });
     }
 };

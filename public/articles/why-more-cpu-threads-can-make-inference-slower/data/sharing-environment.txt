@@ -1,17 +1,525 @@
 Compiler: Apple LLVM 21.0.0 (clang-2100.1.1.101)
 C++: 202002
 hardware_concurrency hint: 10
-10 shuffled rounds; 100 observations/block; 20 warmups/block
+10 shuffled rounds; 100 observations/block; minimum 250 ms and 20 warmup calls/block
 Empty dispatch: zero tasks, all configured workers acknowledge completion
 Attention: B=1 H=8 Lq=1 Dk=Dv=64; Lk=16,64,2048; 8 tasks
 workers=0: inline attention, no pool
 Timing: dispatch/control OR complete attention; creation and I/O excluded
-Chip: Apple M5
-Total Number of Cores: 10 (4 Performance and 6 Efficiency)
-Memory: 16 GB
+caller_requested_qos: 33
+round=0 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=0 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=0 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=0 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=0 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=keys-16 workers=0 caller_requested_qos=33
+round=0 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=0 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=0 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=0 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=0 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=0 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=0 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=0 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=0 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=keys-64 workers=0 caller_requested_qos=33
+round=0 workload=keys-2048 workers=0 caller_requested_qos=33
+round=0 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=1 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=1 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=keys-16 workers=0 caller_requested_qos=33
+round=1 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=1 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=keys-64 workers=0 caller_requested_qos=33
+round=1 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=1 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=1 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=1 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=1 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=1 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=1 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=1 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=1 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=keys-2048 workers=0 caller_requested_qos=33
+round=1 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=2 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=2 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=2 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=2 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=keys-64 workers=0 caller_requested_qos=33
+round=2 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=2 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=2 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=2 workload=keys-16 workers=0 caller_requested_qos=33
+round=2 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=2 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=2 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=keys-2048 workers=0 caller_requested_qos=33
+round=2 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=2 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=2 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=2 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=3 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=3 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=3 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=3 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=3 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=3 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=3 workload=keys-16 workers=0 caller_requested_qos=33
+round=3 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=3 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=3 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=3 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=3 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=3 workload=keys-2048 workers=0 caller_requested_qos=33
+round=3 workload=keys-64 workers=0 caller_requested_qos=33
+round=3 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=4 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=4 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=4 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=4 workload=keys-2048 workers=0 caller_requested_qos=33
+round=4 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=4 workload=keys-16 workers=0 caller_requested_qos=33
+round=4 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=4 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=4 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=4 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=4 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=4 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=4 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=keys-64 workers=0 caller_requested_qos=33
+round=4 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=4 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=5 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=5 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=keys-16 workers=0 caller_requested_qos=33
+round=5 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=keys-64 workers=0 caller_requested_qos=33
+round=5 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=keys-2048 workers=0 caller_requested_qos=33
+round=5 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=5 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=5 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=5 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=5 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=5 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=5 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=6 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=6 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=6 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=keys-16 workers=0 caller_requested_qos=33
+round=6 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=6 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=keys-2048 workers=0 caller_requested_qos=33
+round=6 workload=keys-64 workers=0 caller_requested_qos=33
+round=6 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=6 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=6 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=6 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=7 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=7 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=7 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=7 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=7 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=keys-64 workers=0 caller_requested_qos=33
+round=7 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=keys-2048 workers=0 caller_requested_qos=33
+round=7 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=7 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=7 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=keys-16 workers=0 caller_requested_qos=33
+round=7 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=7 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=8 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=8 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=8 workload=keys-16 workers=0 caller_requested_qos=33
+round=8 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=8 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=8 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=8 workload=keys-2048 workers=0 caller_requested_qos=33
+round=8 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=8 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=8 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=keys-64 workers=0 caller_requested_qos=33
+round=8 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=8 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=keys-2048 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=9 workload=empty-dispatch workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=empty-dispatch workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=9 workload=keys-64 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=keys-2048 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=keys-2048 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=keys-16 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=9 workload=keys-2048 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=keys-64 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=9 workload=keys-2048 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=keys-64 workers=0 caller_requested_qos=33
+round=9 workload=keys-64 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=empty-dispatch workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=keys-2048 workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=9 workload=keys-64 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=9 workload=keys-16 workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=keys-16 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=empty-dispatch workers=10 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21 21 21
+round=9 workload=keys-16 workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=empty-dispatch workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=keys-16 workers=6 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21
+round=9 workload=keys-64 workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=keys-16 workers=0 caller_requested_qos=33
+round=9 workload=keys-16 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=keys-64 workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=keys-2048 workers=0 caller_requested_qos=33
+round=9 workload=empty-dispatch workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+CPU: Apple M5; 10 cores (4 Performance, 6 Efficiency); 16 GB memory
 OS: macOS 26.6.2 (25G83), arm64
-Build: clang++ -O3 -std=c++20 -pthread examples/sharing_benchmark.cpp
-Run date: 2026-11-22; shared desktop, default OS scheduling and power management
-Worker placement and CPU frequency not recorded
-Ten score-scratch buffers preallocated per attention job for up to ten workers
-ASan check: all three shapes at 1,2,4,6,8,10 workers, 20 repetitions each, passed
+Run date: 2026-11-22; shared desktop; default OS scheduling and power management
+Build flags: -O3 -std=c++20 -pthread; no sanitizer instrumentation
+Requested QoS read using pthread_get_qos_class_np; 33=USER_INTERACTIVE, 21=DEFAULT
+Worker-to-core placement and CPU frequency not measured

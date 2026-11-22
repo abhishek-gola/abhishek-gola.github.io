@@ -43,7 +43,7 @@ for name in ['short-context', 'long-context', 'prefill']:
                           'round_median_ms': [float(np.median([float(r['ms']) for r in selected if int(r['round'])==rnd])) for rnd in range(10)]})
 report = {'scope': 'inline attention OR persistent-pool dispatch + attention + completion wait',
           'inline_encoding': 'workers=0 means execution on caller, no pool',
-          'rounds': 10, 'samples_per_block': 100, 'warmups_per_block': 20,
+          'rounds': 10, 'samples_per_block': 100, 'minimum_warmup_calls': 20, 'minimum_warmup_ms_per_block': 250,
           'reference_rtol': 1e-5, 'reference_atol': 1e-6, 'correctness': checks,
           'benchmark_sha256': hashlib.sha256((ROOT/'examples/attention_benchmark.cpp').read_bytes()).hexdigest(),
           'copy_header_sha256': hashlib.sha256((ROOT/'examples/copy.hpp').read_bytes()).hexdigest(),

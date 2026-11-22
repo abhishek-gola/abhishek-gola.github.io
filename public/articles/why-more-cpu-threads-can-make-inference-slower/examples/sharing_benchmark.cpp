@@ -10,12 +10,13 @@ int main(int argc, char** argv) {
     std::ofstream meta(dir+"/sharing-environment.txt");
     meta << "Compiler: " << __VERSION__ << "\nC++: " << __cplusplus
          << "\nhardware_concurrency hint: " << std::thread::hardware_concurrency()
-         << "\n10 shuffled rounds; 100 observations/block; 20 warmups/block\n"
+         << "\n10 shuffled rounds; 100 observations/block; minimum 250 ms and 20 warmup calls/block\n"
          << "Empty dispatch: zero tasks, all configured workers acknowledge completion\n"
          << "Attention: B=1 H=8 Lq=1 Dk=Dv=64; Lk=16,64,2048; 8 tasks\n"
          << "workers=0: inline attention, no pool\n"
          << "Timing: dispatch/control OR complete attention; creation and I/O excluded\n";
 
+    meta << "caller_requested_qos: " << requested_qos() << '\n';
     std::vector<Attention> jobs;
     jobs.emplace_back("keys-16",1,16);
     jobs.emplace_back("keys-64",1,64);
@@ -44,7 +45,10 @@ int main(int argc, char** argv) {
                 else if (pool) jobs[j].run(*pool);
                 else jobs[j].run_inline();
             };
-            for (int k=0; k<20; ++k) run();
+            warm_up(run);
+            meta << "round=" << round << " workload=" << (j<0 ? "empty-dispatch" : jobs[j].name)
+                 << " workers=" << workers << " caller_requested_qos=" << requested_qos() << '\n';
+            if (pool) pool->record_qos(meta);
             for (int sample=0; sample<100; ++sample) {
                 const auto start=std::chrono::steady_clock::now();
                 run();
@@ -56,6 +60,7 @@ int main(int argc, char** argv) {
                     << workers << ',' << round << ',' << sample << ',' << us << '\n';
             }
         }
+        std::cout << "sharing round " << round+1 << "/10 complete" << std::endl;
     }
     for (int j=0; j<3; ++j) {
         std::ofstream out(dir+"/sharing-"+jobs[j].name+"-output.txt");

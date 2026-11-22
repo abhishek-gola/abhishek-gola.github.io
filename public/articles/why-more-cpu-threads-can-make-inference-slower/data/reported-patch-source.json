@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/opencv/opencv/pull/28821#issuecomment-4294666478",
+  "hardware_as_reported": "Ryzen x2700",
+  "cmake_as_reported": "default cmake options",
+  "total_rows": 106,
+  "cpu_rows": 37,
+  "thread_count": "not specified in the report",
+  "article_selection": "YOLOv5 and YOLOv8 for relevance to the contribution; AlexNet to include a regression"
+}

@@ -2,13 +2,282 @@ Compiler: Apple LLVM 21.0.0 (clang-2100.1.1.101)
 C++: 202002
 hardware_concurrency hint: 10
 B=1 H=8 Dk=Dv=64; query tile=32; unmasked; no dropout
-10 shuffled rounds, 100 samples/block, 20 warmups/block
+10 shuffled rounds, 100 samples/block, minimum 250 ms and 20 warmup calls/block
 Timing: inline attention OR persistent-pool dispatch + attention + completion wait
-CPU: Apple M5; 10 cores (4 Performance, 6 Efficiency), verified with system_profiler
-Memory: 16 GB
+caller_requested_qos: 33
+round=0 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=0 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=short-context workers=0 caller_requested_qos=33
+round=0 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=short-context workers=0 caller_requested_qos=33
+round=1 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=short-context workers=0 caller_requested_qos=33
+round=2 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=short-context workers=0 caller_requested_qos=33
+round=3 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=3 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=short-context workers=0 caller_requested_qos=33
+round=4 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=short-context workers=0 caller_requested_qos=33
+round=5 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=5 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=short-context workers=0 caller_requested_qos=33
+round=6 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=short-context workers=0 caller_requested_qos=33
+round=7 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=short-context workers=0 caller_requested_qos=33
+round=8 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=short-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=short-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=short-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=short-context workers=0 caller_requested_qos=33
+round=9 workload=short-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=long-context workers=0 caller_requested_qos=33
+round=0 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=long-context workers=0 caller_requested_qos=33
+round=1 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=long-context workers=0 caller_requested_qos=33
+round=2 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=2 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=long-context workers=0 caller_requested_qos=33
+round=3 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=4 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=4 workload=long-context workers=0 caller_requested_qos=33
+round=5 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=long-context workers=0 caller_requested_qos=33
+round=5 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=long-context workers=0 caller_requested_qos=33
+round=6 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=long-context workers=0 caller_requested_qos=33
+round=7 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=7 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=8 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=long-context workers=0 caller_requested_qos=33
+round=8 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=long-context workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=9 workload=long-context workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=long-context workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=long-context workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=long-context workers=0 caller_requested_qos=33
+round=0 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=0 workload=prefill workers=0 caller_requested_qos=33
+round=0 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=0 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=0 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=1 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=1 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=1 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=1 workload=prefill workers=0 caller_requested_qos=33
+round=2 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=2 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=2 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=2 workload=prefill workers=0 caller_requested_qos=33
+round=2 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=3 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=3 workload=prefill workers=0 caller_requested_qos=33
+round=3 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=3 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=4 workload=prefill workers=0 caller_requested_qos=33
+round=4 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=4 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=4 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=5 workload=prefill workers=0 caller_requested_qos=33
+round=5 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=5 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=5 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=6 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=6 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=6 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=6 workload=prefill workers=0 caller_requested_qos=33
+round=7 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=7 workload=prefill workers=0 caller_requested_qos=33
+round=7 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=7 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=7 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+round=8 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=8 workload=prefill workers=0 caller_requested_qos=33
+round=8 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=8 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=prefill workers=1 caller_requested_qos=33
+worker_requested_qos: 21
+round=9 workload=prefill workers=4 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21
+round=9 workload=prefill workers=0 caller_requested_qos=33
+round=9 workload=prefill workers=8 caller_requested_qos=33
+worker_requested_qos: 21 21 21 21 21 21 21 21
+round=9 workload=prefill workers=2 caller_requested_qos=33
+worker_requested_qos: 21 21
+CPU: Apple M5; 10 cores (4 Performance, 6 Efficiency); 16 GB memory
 OS: macOS 26.6.2 (25G83), arm64
-Build: clang++ -O3 -std=c++20 -pthread examples/attention_benchmark.cpp
 Run date: 2026-11-22; shared desktop; default OS scheduling and power management
-Worker-to-core placement was not recorded; no per-core pinning was used
-Inputs, outputs and per-worker score scratch preallocated and reused
-workers=0 encodes inline execution on the caller with no pool
+Build flags: -O3 -std=c++20 -pthread; no sanitizer instrumentation
+Requested QoS read using pthread_get_qos_class_np; 33=USER_INTERACTIVE, 21=DEFAULT
+Worker-to-core placement and CPU frequency not measured

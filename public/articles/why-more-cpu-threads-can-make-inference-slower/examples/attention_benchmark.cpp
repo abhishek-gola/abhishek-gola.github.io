@@ -17,6 +17,26 @@
 #include <thread>
 #include <vector>
 #include "copy.hpp"
+#ifdef __APPLE__
+#include <pthread/qos.h>
+#endif
+
+inline int requested_qos() {
+#ifdef __APPLE__
+    qos_class_t value; int priority=0;
+    if (pthread_get_qos_class_np(pthread_self(), &value, &priority)==0)
+        return static_cast<int>(value);
+#endif
+    return -1;
+}
+
+template<class Run>
+void warm_up(Run&& run) {
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::milliseconds(250);
+    std::size_t calls=0;
+    do { run(); ++calls; }
+    while (calls<20 || std::chrono::steady_clock::now()<deadline);
+}
 
 // Fixed background-worker count; the calling thread waits rather than computes.
 // run() calls must not overlap; task functions must not throw.
@@ -28,12 +48,14 @@ class Pool {
     std::atomic<std::size_t> next_{0};
     std::function<void(std::size_t, std::size_t)> job_;
     std::vector<std::jthread> threads_;
+    std::vector<int> qos_;
 public:
-    explicit Pool(std::size_t workers) {
+    explicit Pool(std::size_t workers) : qos_(workers,-1) {
         if (!workers) throw std::invalid_argument("workers must be positive");
         try {
             for (std::size_t w = 0; w < workers; ++w) {
                 threads_.emplace_back([this, w] {
+                    qos_[w]=requested_qos();
                     std::size_t seen = 0;
                     for (;;) {
                         std::unique_lock lock(mutex_);
@@ -57,6 +79,12 @@ public:
             threads_.clear();
             throw;
         }
+    }
+    std::size_t size() const { return threads_.size(); }
+    void record_qos(std::ostream& out) const {
+        out << "worker_requested_qos:";
+        for (int value : qos_) out << ' ' << value;
+        out << '\n';
     }
     void run(std::size_t tasks,
              const std::function<void(std::size_t, std::size_t)>& job) {
@@ -122,6 +150,8 @@ struct Attention {
         for (std::size_t t=0; t<tasks(); ++t) task(t,0);
     }
     void run(Pool& pool) {
+        if (pool.size()>scratch.size())
+            throw std::invalid_argument("pool width exceeds score-scratch slots");
         pool.run(tasks(),[this](auto task_id, auto worker) { task(task_id,worker); });
     }
 };
@@ -136,12 +166,15 @@ int main(int argc, char** argv) {
     meta << "Compiler: " << __VERSION__ << "\nC++: " << __cplusplus
          << "\nhardware_concurrency hint: " << std::thread::hardware_concurrency()
          << "\nB=1 H=8 Dk=Dv=64; query tile=32; unmasked; no dropout\n"
-         << "10 shuffled rounds, 100 samples/block, 20 warmups/block\n"
+         << "10 shuffled rounds, 100 samples/block, minimum 250 ms and 20 warmup calls/block\n"
          << "Timing: inline attention OR persistent-pool dispatch + attention + completion wait\n";
+
+    meta << "caller_requested_qos: " << requested_qos() << '\n';
 
     // Copy correctness: empty, boundary, partial tail and worker budgets.
     for (auto bytes : {std::size_t{0},std::size_t{131072},std::size_t{131073},std::size_t{1048577}}) {
-        std::vector<std::byte> src(bytes,std::byte{0x5a}), dst(bytes);
+        std::vector<std::byte> src(bytes), dst(bytes);
+        for (std::size_t i=0; i<bytes; ++i) src[i]=std::byte(i%251);
         for (auto w : {0u,1u,4u,8u}) {
             std::fill(dst.begin(),dst.end(),std::byte{0});
             copy_chunked(dst.data(),src.data(),bytes,w);
@@ -168,7 +201,10 @@ int main(int argc, char** argv) {
                     else attention.run_inline();
                 };
                 // Pool creation and warm-up are outside the measured interval.
-                for (int i=0; i<20; ++i) run();
+                warm_up(run);
+                meta << "round=" << round << " workload=" << attention.name
+                     << " workers=" << workers << " caller_requested_qos=" << requested_qos() << '\n';
+                if (pool) pool->record_qos(meta);
                 for (int sample=0; sample<100; ++sample) {
                     const auto start=std::chrono::steady_clock::now();
                     run();
@@ -178,6 +214,7 @@ int main(int argc, char** argv) {
                     csv << attention.name << ',' << workers << ',' << round << ',' << sample << ',' << ms << '\n';
                 }
             }
+            std::cout << attention.name << " round " << round+1 << "/10 complete" << std::endl;
         }
         std::ofstream out(dir+"/attention-"+attention.name+"-output.txt");
         out << std::setprecision(9);
