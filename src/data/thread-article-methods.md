@@ -10,19 +10,19 @@ Abhishek Gola authored [OpenCV PR #28821](https://github.com/opencv/opencv/pull/
 
 The [maintainer's report](https://github.com/opencv/opencv/pull/28821#issuecomment-4294666478) labels the host “Ryzen x2700” and says “default cmake options.” It contains 106 rows, including 37 CPU rows. The thread count is not specified. The label is retained rather than interpreted as a particular Ryzen model.
 
-The article selects YOLOv5 and YOLOv8 for relevance to the contribution, plus AlexNet to include a regression. [All 37 CPU rows](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-cpu-results.csv) and [source metadata](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-source.json) are supplied. The values are reported geometric-mean milliseconds for the combined patch. They do not isolate a particular layer change or constitute a thread-count sweep.
+The article selects YOLOv5 and YOLOv8 for relevance to the contribution, plus AlexNet to include a regression. [All 37 CPU rows](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-cpu-results.csv?v=51a143d4cc23) and [source metadata](/articles/why-more-cpu-threads-can-make-inference-slower/data/reported-patch-source.json?v=83f2f0898c91) are supplied. The values are reported geometric-mean milliseconds for the combined patch. They do not isolate a particular layer change or constitute a thread-count sweep.
 
 ## Standalone C++ and correctness checks
 
-[examples/copy.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/copy.hpp) uses standard C++20 `std::jthread` and `std::memcpy`. Each worker handles disjoint chunk indices. It creates threads per call, with automatic joining described in the [N4861 draft](https://timsong-cpp.github.io/cppwp/n4861/thread.jthread.class). Its inherited 128 KiB gate illustrates the branch; a useful cutoff for fresh threads would require measurement.
+[examples/copy.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/copy.hpp?v=814f7d7e597e) uses standard C++20 `std::jthread` and `std::memcpy`. Each worker handles disjoint chunk indices. It creates threads per call, with automatic joining described in the [N4861 draft](https://timsong-cpp.github.io/cppwp/n4861/thread.jthread.class). Its inherited 128 KiB gate illustrates the branch; a useful cutoff for fresh threads would require measurement.
 
-[examples/check_sharing.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/check_sharing.cpp) covers:
+[examples/check_sharing.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/check_sharing.cpp?v=6779d5fb3534) covers:
 
 - Copy sizes zero, exactly 128 KiB, 128 KiB + 1 byte and 1 MiB + 1 byte, with zero, one, four and eight requested workers. Source bytes use `i % 251`, so common wrong-offset copies produce different results. The destination begins with a different sentinel value.
 - Rejection of a pool wider than the attention kernel's score-scratch allocation. `Attention::run(Pool&)` checks this before dispatch.
 - Exactly-once execution of 257 task indices, empty dispatch completion and attention agreement with inline execution across one, two, four, six, eight and ten workers.
 
-Separate AddressSanitizer and ThreadSanitizer builds passed these checks. AddressSanitizer checks memory accesses; ThreadSanitizer detects races in exercised execution paths. Neither is a proof for arbitrary callers or inputs. [Validation details and source hashes](/articles/why-more-cpu-threads-can-make-inference-slower/data/validation.json) record the tested code. Sanitizer binaries are never used for performance measurements.
+Separate AddressSanitizer and ThreadSanitizer builds passed these checks. AddressSanitizer checks memory accesses; ThreadSanitizer detects races in exercised execution paths. Neither is a proof for arbitrary callers or inputs. [Validation details and source hashes](/articles/why-more-cpu-threads-can-make-inference-slower/data/validation.json?v=bdadfe26ff55) record the tested code. Sanitizer binaries are never used for performance measurements.
 
 ## Attention kernel
 
@@ -44,7 +44,7 @@ The desktop is shared, with default scheduling and power management. No QoS clas
 
 ### Figure 3: sharing-cost probe
 
-[examples/sharing_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp) uses the pool and kernel snapshot in [examples/sharing_reference.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_reference.hpp). The summarizer verifies it against the definitions in the attention source. Ten score buffers support the probe's maximum width of ten.
+[examples/sharing_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_benchmark.cpp?v=87456ef7a070) uses the pool and kernel snapshot in [examples/sharing_reference.hpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/sharing_reference.hpp?v=77804751171f). The summarizer verifies it against the definitions in the attention source. Ten score buffers support the probe's maximum width of ten.
 
 The 27 configurations comprise:
 
@@ -57,13 +57,13 @@ Empty dispatch calls this pool with zero tasks. Workers still receive notificati
 
 Figure 3 shows pooled medians for empty dispatch and 64-key attention. Faint dots show ten block medians. Its dashed baseline is the measured inline median. Lines connect tested widths only. The other shapes remain in the report and raw samples.
 
-- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-environment.txt).
-- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_sharing.py).
-- Reference vectors: [16 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-16-output.txt), [64 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-64-output.txt), [2,048 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-2048-output.txt).
+- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-samples.csv?v=453418a2e9fc), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-report.json?v=f2e79348676d), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-environment.txt?v=92197df7bac1).
+- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_sharing.py?v=8b428e520c75).
+- Reference vectors: [16 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-16-output.txt?v=43f311b8d896), [64 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-64-output.txt?v=64640745870d), [2,048 keys](/articles/why-more-cpu-threads-can-make-inference-slower/data/sharing-keys-2048-output.txt?v=d8e497f61664).
 
 ### Figure 4: attention sweep
 
-[examples/attention_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/attention_benchmark.cpp) tests these shapes:
+[examples/attention_benchmark.cpp](/articles/why-more-cpu-threads-can-make-inference-slower/examples/attention_benchmark.cpp?v=c859a194f1f7) tests these shapes:
 
 | Case | Queries | Keys | Query tile | Tasks |
 | --- | ---: | ---: | ---: | ---: |
@@ -75,9 +75,9 @@ Each shape runs inline and in pools of one, two, four and eight workers. Configu
 
 Figure 4 bars show pooled medians, diamonds show pooled p95 and faint dots show block medians. The short-context panel uses microseconds; the other panels use milliseconds, with separate scales.
 
-- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-samples.csv), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-report.json), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-environment.txt).
-- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_attention.py).
-- Reference vectors: [short context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-short-context-output.txt), [long context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-long-context-output.txt), [prefill-shaped](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-prefill-output.txt).
+- [Raw samples](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-samples.csv?v=bba5feeeb9f6), [report](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-report.json?v=674b2036e5e0), [environment and QoS records](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-environment.txt?v=542b96e846a3).
+- [Independent numerical check and summarizer](/articles/why-more-cpu-threads-can-make-inference-slower/examples/summarize_attention.py?v=816cb0161378).
+- Reference vectors: [short context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-short-context-output.txt?v=43f311b8d896), [long context](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-long-context-output.txt?v=d8e497f61664), [prefill-shaped](/articles/why-more-cpu-threads-can-make-inference-slower/data/attention-prefill-output.txt?v=7ca93d8996ea).
 
 Both C++ programs compare every timed attention result against inline output after timing. Both Python summarizers independently regenerate the inputs and evaluate float64 attention with NumPy reductions. All outputs must be finite and match at `rtol=1e-5, atol=1e-6`. They validate sample grids and numerical agreement, and record source hashes. The plotting script independently checks medians and p95 against raw samples.
 
@@ -91,7 +91,7 @@ Time-based warm-up does not eliminate the issue. In the current sharing run, one
 
 The sharing probe repeats the short- and long-context shapes in the attention sweep. In the initial runs, 16-key inline medians were about 4.9 and 6.3 μs, while 2,048-key inline medians were about 1.30 and 1.54 ms. Qualitative scaling repeated, but absolute times and ratios changed. Current reruns preserve that distinction between replication of a qualitative result and precise deployment estimates.
 
-The [initial summaries](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-summaries.json) and [initial published package](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-publication.zip) retain all earlier reports, raw samples and the exact source used for those timings. Current reports identify the revised sources. Samples from different runs are never pooled. The article's observed ratio range covers the two initial runs and two current reruns; it is an observed range, not a statistical uncertainty interval.
+The [initial summaries](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-summaries.json?v=d1efdaeed209) and [initial published package](/articles/why-more-cpu-threads-can-make-inference-slower/data/initial-publication.zip?v=7ba291b51229) retain all earlier reports, raw samples and the exact source used for those timings. Current reports identify the revised sources. Samples from different runs are never pooled. The article's observed ratio range covers the two initial runs and two current reruns; it is an observed range, not a statistical uncertainty interval.
 
 ## Other figures and runtime references
 
