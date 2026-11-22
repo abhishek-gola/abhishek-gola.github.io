@@ -15,6 +15,6 @@ const topics = [...new Set(entries.map(entry => entry.topic))];
   <section class="reading-container publication-section archive-content">
     {(topics.length > 1 || entries.length > 5) && <Filter categories={topics.length > 1 ? topics : []} search={entries.length > 5}/>}
     <WritingList/>
-    <p class="note">External articles open at their original publication. The AWS article is also listed in <a href="https://aws.amazon.com/blogs/spatial/category/compute/graviton/">the publisher’s archive</a> if its original link is unavailable.</p>
+    <p class="note">External articles open at their original publication. The AWS article links to an archived copy because its publisher URL is unavailable.</p>
   </section>
 </Layout>
