@@ -1,6 +1,6 @@
 # Sources, benchmark methods and reproduction
 
-The article has five figures: copy partitioning, a conceptual cost model, a measured sharing-cost probe, a three-workload attention sweep and a serving-topology diagram. Current measurements use a time-based warm-up. Initial published runs remain available for comparison.
+The article has five figures: copy partitioning, a conceptual cost model, a measured sharing-cost probe, a three-workload attention sweep and a serving-topology diagram. Current measurements use a time-based warm-up. Two earlier runs using only a fixed twenty-call warm-up are archived for comparison.
 
 ## Implementation sources and reported patch results
 
@@ -12,7 +12,7 @@ Abhishek Gola authored [OpenCV PR #28821](https://github.com/opencv/opencv/pull/
 
 The [maintainer's report](https://github.com/opencv/opencv/pull/28821#issuecomment-4294666478) labels the host “Ryzen x2700” and says “default cmake options.” It contains 106 rows, including 37 CPU rows. The thread count is not specified. The label is retained rather than interpreted as a particular Ryzen model.
 
-The article selects YOLOv5 and YOLOv8 for relevance to the contribution, plus AlexNet to include a regression. [All 37 CPU rows](data/reported-patch-cpu-results.csv) and [source metadata](data/reported-patch-source.json) are supplied. The values are reported geometric-mean milliseconds for the combined patch. They do not isolate a particular layer change or constitute a thread-count sweep.
+The article selects the two largest percentage CPU-latency reductions, YOLOv5 and YOLOv8, and the largest percentage increase, AlexNet. [All 37 CPU rows](data/reported-patch-cpu-results.csv) and [source metadata](data/reported-patch-source.json) are supplied. The values are reported geometric-mean milliseconds for the combined patch. Comparing all 37 reported CPU values gives 25 latency reductions and 12 increases; 24 absolute changes are below 2%, and seven latency reductions are at least 5%. AlexNet increases latency by 2.87%. The unweighted geometric mean of baseline/patch ratios is 1.0194. These are comparisons of reported point estimates; the source provides no uncertainty estimates. They do not isolate a particular layer change or constitute a thread-count sweep.
 
 ## Standalone C++ and correctness checks
 
@@ -42,7 +42,7 @@ Each configuration has ten blocks of one hundred timed calls. Before **every blo
 
 Pools are recreated outside timing for each block, then reused through warm-up and measurement. That design exposes variation between pool instances and placements. `steady_clock` measures each call. Pool creation, tensor/scratch allocation, output validation and CSV writes are outside timing. Dispatch and completion are inside pool timing; inline timing covers the direct kernel. Pool bookkeeping is included.
 
-The desktop is shared, with default scheduling and power management. No QoS class is assigned by the benchmark. `pthread_get_qos_class_np` records requested classes: the caller reported `USER_INTERACTIVE` (33), and workers reported `DEFAULT` (21), in both current runs. These values are defined in the macOS SDK's `sys/qos.h`. Worker inheritance is not assumed. Requested QoS does not identify the physical core used; effective priority, frequency and core placement were not traced.
+The desktop is shared, with default scheduling and power management. No QoS class is assigned by the benchmark. `pthread_get_qos_class_np` records requested classes: the caller reported `USER_INTERACTIVE` (33), and workers reported `DEFAULT` (21), in both current runs. These values are defined in the macOS SDK's `sys/qos.h`. Worker inheritance is not assumed. The unmatched requested QoS is a confounder in inline-versus-pool comparisons: it can influence scheduling, performance/efficiency-core placement and execution time. Pool-width comparisons keep the workers at the same requested class. The recorded data do not quantify how much QoS contributed. Requested QoS does not identify the physical core used; effective priority, frequency and core placement were not traced.
 
 ### Figure 3: sharing-cost probe
 
@@ -90,6 +90,8 @@ Pooled p95 combines within-block variation with shifts between blocks. Since eac
 In the initial attention run, short-context inline round zero had a median near 11.8 μs, versus approximately 4.9 μs later. The initial one-worker pool's first block was near 19.8 μs, versus roughly 7 μs later. Those blocks largely determine the corresponding pooled p95 values. A steady slow block does not establish whether a core type, clock state or another mechanism caused it.
 
 Time-based warm-up does not eliminate the issue. In the current sharing run, one 64-key, one-worker block has a median near 65.2 μs while the other block medians range from about 28.0 to 30.9 μs; pooled p95 is about 65.9 μs. The block dots and retained samples make that state shift visible rather than filtering it out. Pooled p95 is not a steady-state per-call latency guarantee or a confidence interval.
+
+The sharing probe repeats the short- and long-context shapes in the attention sweep. Across the ten shared configurations (two shapes × inline/1/2/4/8 workers), the maximum absolute median difference divided by the first sweep’s median was 29.86% in the earlier fixed-call pair and 6.71% in the time-warmed pair. The closer agreement is consistent with improved startup control, but these two pairs do not isolate the causal effect of warm-up.
 
 The sharing probe repeats the short- and long-context shapes in the attention sweep. In the initial runs, 16-key inline medians were about 4.9 and 6.3 μs, while 2,048-key inline medians were about 1.30 and 1.54 ms. Qualitative scaling repeated, but absolute times and ratios changed. Current reruns preserve that distinction between replication of a qualitative result and precise deployment estimates.
 

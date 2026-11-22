@@ -5,5 +5,13 @@
   "total_rows": 106,
   "cpu_rows": 37,
   "thread_count": "not specified in the report",
-  "article_selection": "YOLOv5 and YOLOv8 for relevance to the contribution; AlexNet to include a regression"
+  "article_selection": "Two largest percentage latency reductions (YOLOv5 and YOLOv8), and largest percentage increase (AlexNet).",
+  "summary": {
+    "lower_latency_rows": 25,
+    "higher_latency_rows": 12,
+    "absolute_latency_change_below_2_percent": 24,
+    "latency_reduction_at_least_5_percent": 7,
+    "largest_latency_increase_percent": 2.8711424396114626,
+    "unweighted_geometric_mean_speed_factor": 1.0193653634910436
+  }
 }
