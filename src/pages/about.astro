@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { profile } from '../data/site';
+---
+<Layout title="About" description="Abhishek Gola, computer vision engineer and OpenCV maintainer. Background, open-source work, and professional links.">
+  <section class="publication-intro reading-container">
+    <span class="eyebrow">ABOUT</span>
+    <h1>Abhishek Gola.</h1>
+    <p>Computer vision engineer and OpenCV maintainer, working on inference engines, C++ performance, CPU/CUDA optimization, and 3D perception.</p>
+  </section>
+  <div class="reading-container about-content">
+    <div class="prose">
+      <h2>Engineering and speaking</h2>
+      <p>I work as a Senior Computer Vision Engineer at Big Vision. My public work includes contributions to OpenCV’s DNN engine and tensor infrastructure, and calibsense, a tool for calibration uncertainty.</p>
+      <p>I share the practical lessons behind this work through technical talks and writing. Articles published elsewhere link to the original source and credit co-authors.</p>
+      <p>I also contribute to OpenCV community education and GSoC mentorship. Background and contribution history are available on <a href={profile.github}>GitHub</a>.</p>
+    </div>
+    <div class="about-links">
+      <a href="/opencv/"><strong>Open-source contributions</strong><span>OpenCV case studies and source code →</span></a>
+      <a href="/projects/"><strong>Projects</strong><span>calibsense and inference benchmarking →</span></a>
+      <a href="/talks/"><strong>Talks & community</strong><span>Webinars and mentorship →</span></a>
+    </div>
+    <p class="note">For technical questions, collaboration, or speaking: <a href={`mailto:${profile.email}`}>{profile.email}</a>.</p>
+  </div>
+</Layout>

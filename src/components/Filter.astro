@@ -1,0 +1,64 @@
+---
+const { categories, search = false } = Astro.props;
+---
+<div class="filter-bar">
+  <div class="filter-buttons" role="group" aria-label="Filter by topic">
+    {['All', ...categories].map(category => <button type="button" data-category={category} aria-pressed={category === 'All'}>{category}</button>)}
+  </div>
+  {search && <label class="search-label"><span class="sr-only">Search articles</span><input type="search" placeholder="Search writing…" data-search-input/></label>}
+</div>
+<p class="filter-empty" hidden data-empty>No entries match this selection. Try another topic.</p>
+<p class="sr-only" role="status" data-filter-status></p>
+<script>
+const bar = document.querySelector('.filter-bar');
+if (bar) {
+  const buttons = Array.from(bar.querySelectorAll<HTMLButtonElement>('[data-category]'));
+  const input = bar.querySelector<HTMLInputElement>('[data-search-input]');
+  const items = document.querySelectorAll<HTMLElement>('[data-filter-item]');
+  let category = 'All';
+
+  function apply(announce = true) {
+    let count = 0;
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.category === category)));
+    items.forEach(item => {
+      const matchesTopic = category === 'All' || item.dataset.tags?.split('|').includes(category);
+      const matchesSearch = !input?.value || item.dataset.search?.toLowerCase().includes(input.value.trim().toLowerCase());
+      item.hidden = !(matchesTopic && matchesSearch);
+      if (!item.hidden) count++;
+    });
+    const empty = document.querySelector<HTMLElement>('[data-empty]');
+    if (empty) empty.hidden = count > 0;
+    const status = document.querySelector<HTMLElement>('[data-filter-status]');
+    if (status && announce) status.textContent = `${count} ${count === 1 ? 'entry' : 'entries'} shown`;
+  }
+
+  function readLocation(announce = true) {
+    const parameters = new URLSearchParams(location.search);
+    const topic = parameters.get('topic');
+    category = buttons.some(button => button.dataset.category === topic) ? topic! : 'All';
+    if (input) input.value = parameters.get('q') || '';
+    apply(announce);
+  }
+
+  function saveLocation(mode: 'push' | 'replace') {
+    const url = new URL(location.href);
+    if (category === 'All') url.searchParams.delete('topic');
+    else url.searchParams.set('topic', category);
+    if (input?.value.trim()) url.searchParams.set('q', input.value.trim());
+    else url.searchParams.delete('q');
+    if (url.href !== location.href) {
+      if (mode === 'push') history.pushState(null, '', url);
+      else history.replaceState(null, '', url);
+    }
+  }
+
+  buttons.forEach(button => button.addEventListener('click', () => {
+    category = button.dataset.category!;
+    saveLocation('push');
+    apply();
+  }));
+  input?.addEventListener('input', () => { saveLocation('replace'); apply(); });
+  window.addEventListener('popstate', () => readLocation());
+  readLocation(false);
+}
+</script>

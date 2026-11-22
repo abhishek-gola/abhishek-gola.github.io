@@ -1,0 +1,14 @@
+---
+const {compact=false} = Astro.props;
+const cubes = Array.from({length:27},(_,i)=>{const x=i%3,y=Math.floor(i/3)%3,z=Math.floor(i/9);return {x:262+(x-y)*49,y:150+(x+y)*25-z*55,z,xn:x,yn:y};}).sort((a,b)=>a.z-b.z || a.y-b.y);
+---
+<div class:list={['tensor-visual',{compact}]}>
+<svg viewBox="0 0 530 390" role="img" aria-label="Conceptual three-dimensional tensor lattice, showing data organized across three axes">
+<defs><pattern id="grid" width="35" height="35" patternUnits="userSpaceOnUse" patternTransform="matrix(1 .5 -1 .5 265 180)"><path d="M35 0H0V35" fill="none" stroke="#c6d2e0" stroke-width=".7"/></pattern><radialGradient id="glow"><stop stop-color="#0071e3" stop-opacity=".19"/><stop offset="1" stop-color="#0071e3" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="265" cy="235" rx="260" ry="150" fill="url(#glow)"/><path d="M5 245 265 115 525 245 265 375Z" fill="url(#grid)"/>
+<g stroke="#789ac5" stroke-width="1">{cubes.map(({x,y,z,xn})=><g><path d={`M${x} ${y}l45 -23 45 23 -45 23Z`} fill={z===2?'#c3d7ee':'#e4edf7'} fill-opacity=".85"/><path d={`M${x} ${y}l45 23v48l-45 -23Z`} fill="#eaf0f8" fill-opacity=".72"/><path d={`M${x+45} ${y+23}l45 -23v48l-45 23Z`} fill={xn===2?'#c3d7ee':'#d7e4f3'} fill-opacity=".8"/><circle cx={x+45} cy={y+23} r="2" fill="#0071e3"/></g>)}</g>
+<g fill="none" stroke="#92afcf" stroke-width="1"><path d="M265 305v-36M265 305l110 55M265 305l-110 55"/><path d="M265 110V27M367 177l75 -39" stroke-dasharray="3 5"/></g>
+<g fill="#86868b" font-family="monospace" font-size="11"><text x="254" y="20">z</text><text x="386" y="368">x</text><text x="139" y="368">y</text><text x="389" y="124">N-D TENSOR</text><text x="38" y="343">[ C × H × W ]</text></g>
+</svg>
+<div class="visual-caption"><span class="signal"></span> FROM PIXELS TO PERFORMANCE <span>01 / 03</span></div>
+</div>

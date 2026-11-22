@@ -1,0 +1,29 @@
+---
+import { getPublishedWriting } from '../lib/writing';
+import Arrow from './Arrow.astro';
+const { limit } = Astro.props;
+const entries = (await getPublishedWriting()).slice(0, limit);
+---
+<div class="writing-list">
+  {entries.map(entry => (
+    <article class="writing-row editorial-row" data-filter-item data-tags={entry.topic} data-search={`${entry.title} ${entry.description} ${entry.authors}`}>
+      <div>
+        <span class="eyebrow">{entry.topic}</span>
+        <h3>
+          <a href={entry.url} target={entry.external ? '_blank' : undefined} rel={entry.external ? 'noreferrer' : undefined}>
+            {entry.title}<Arrow diagonal={entry.external}/>
+          </a>
+        </h3>
+        <p>{entry.description}</p>
+        <small>{entry.authors}</small>
+      </div>
+      <div class="article-publication">
+        <span>{entry.publisher}{entry.external ? ' ↗' : ''}</span>
+        <time datetime={entry.date.toISOString()}>
+          {entry.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
+        </time>
+      </div>
+    </article>
+  ))}
+  {entries.length === 0 && <p>No articles published yet.</p>}
+</div>

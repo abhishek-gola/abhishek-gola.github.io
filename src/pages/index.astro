@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Arrow from '../components/Arrow.astro';
+import WritingList from '../components/WritingList.astro';
+import Recordings from '../components/Recordings.astro';
+import { work, profile } from '../data/site';
+import { proposedTalks, speakerBio } from '../data/speaking';
+---
+<Layout title="OpenCV Maintainer & Technical Speaker" description="Abhishek Gola — OpenCV maintainer, computer vision engineer and technical speaker. Talks on inference performance, C++ systems and open-source engineering. Based in Bengaluru.">
+  <section class="speaker-hero container">
+    <div class="hero-topline"><span class="eyebrow">ENGINEER / MAINTAINER / SPEAKER</span><span class="location"><i></i>Bengaluru, India</span></div>
+    <h1>Computer vision.<br/>Systems thinking.<br/><span class="blue-text">Knowledge shared.</span></h1>
+    <div class="hero-bottom"><div><p>I’m <strong>Abhishek Gola</strong>, an OpenCV maintainer and Senior Computer Vision Engineer. I build the systems behind computer vision—and share what it takes to make them work.</p><div class="hero-actions"><a class="button primary" href="#recordings">Watch my talks <Arrow/></a><a class="button outline" href={`mailto:${profile.email}?subject=Speaking%20invitation`}>Invite me to speak ↗</a></div></div><div class="hero-specialties mono"><span>OpenCV DNN</span><span>Inference performance</span><span>C++ · CPU · CUDA</span><span>3D perception</span></div></div>
+  </section>
+  <div class="expertise-strip"><div class="container"><span>Built in the open.</span><a href="/opencv/">OpenCV maintainer ↗</a><a href="#recordings">4 recorded OpenCV sessions ↓</a><a href="https://github.com/opencv/opencv/wiki/GSoC_2026">GSoC mentor ↗</a></div></div>
+  <section id="recordings" class="container speaker-section">
+    <div class="section-heading"><div><span class="eyebrow">01 / ON THE RECORD</span><h2>Engineering, explained.</h2><p>Previous sessions on OpenCV’s channel. Watch the work and the conversation.</p></div><a class="text-link" href="/talks/">Speaking details <Arrow/></a></div>
+    <Recordings/>
+    <p class="recording-footnote">OpenCV community recordings, including team discussions. Dates indicate publication month.</p>
+  </section>
+  <section id="topics" class="topics-section"><div class="container speaker-section">
+    <div class="section-heading"><div><span class="eyebrow">02 / LET’S TALK ABOUT</span><h2>From implementation to insight.</h2><p>Proposed sessions for conferences and developer communities. Format and depth can be tailored to your audience.</p></div></div>
+    <div class="topic-grid">{proposedTalks.map(talk => <article class="speaker-topic"><span class="topic-number mono">{talk.number}</span><h3>{talk.title}</h3><span class="topic-subtitle">{talk.subtitle}</span><p>{talk.description}</p><div class="topic-format"><span>{talk.duration}</span><span>{talk.level}</span></div><a class="text-link" href={`/talks/#talk-${talk.number}`}>Audience & takeaways <Arrow/></a></article>)}</div>
+  </div></section>
+  <section class="container speaker-section" id="work">
+    <div class="section-heading"><div><span class="eyebrow">03 / BEHIND THE TALKS</span><h2>The work behind the words.</h2><p>Selected upstream contributions, with implementation and public review.</p></div><a class="text-link" href="/opencv/">Explore OpenCV work <Arrow/></a></div>
+    <div class="speaker-work">{work.map((item,index) => <a href={`/opencv/${item.slug}/`}><span class="mono work-number">0{index+1}</span><div><span class="eyebrow">OPENCV #{item.number}</span><h3>{item.short}</h3><p>{item.description}</p></div><span class="work-arrow" aria-hidden="true">↗</span></a>)}</div>
+  </section>
+  <section class="container speaker-section writing-section"><div class="section-heading"><div><span class="eyebrow">04 / FURTHER READING</span><h2>Ideas in writing.</h2></div><a class="text-link" href="/writing/">All writing <Arrow/></a></div><WritingList limit={2}/></section>
+  <section id="speaker-kit" class="container speaker-section organizer-section"><div><span class="eyebrow">05 / FOR ORGANIZERS</span><h2>A little context.<br/>A direct conversation.</h2><p class="organizer-intro">Talks grounded in upstream engineering, for people who want to understand the decisions behind the code.</p><a class="text-link" href="/speaker-bio.txt" download>Download speaker bio ↓</a></div><div><h3>Short speaker bio</h3><p class="speaker-bio">{speakerBio}</p><a class="text-link" href="/about/">More about Abhishek <Arrow/></a><div class="availability"><span class="eyebrow">SPEAKING AVAILABILITY</span><p>Bengaluru · Elsewhere in India · International</p><p class="availability-note">For in-person events outside Bengaluru, travel and accommodation support are required.</p></div></div></section>
+  <section class="contact-band"><div class="container"><span class="eyebrow">HAVE AN AUDIENCE IN MIND?</span><h2>Let’s share something useful.</h2><p>For a conference, community meetup, or technical session, tell me about your audience, dates and format.</p><a class="button primary" href={`mailto:${profile.email}?subject=Speaking%20invitation`}>{profile.email} ↗</a><span class="personal-note">Speaking in a personal capacity. Views are my own.</span></div></section>
+</Layout>

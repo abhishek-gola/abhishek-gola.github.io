@@ -1,0 +1,14 @@
+---
+import { recordings } from '../data/speaking';
+---
+<div class="recording-grid">
+  {recordings.map((talk, index) => <article class="recording">
+    <a class="recording-image" href={`https://www.youtube.com/watch?v=${talk.id}`} target="_blank" rel="noreferrer" aria-label={`Watch ${talk.title} on YouTube`}>
+      <img src={`/talks/${talk.id}.jpg`} width="480" height="360" alt="" loading="lazy"/>
+      <span class="play-symbol" aria-hidden="true">▶</span><span class="recording-index mono">0{index + 1} / OPENCV</span>
+    </a>
+    <div class="recording-meta"><span>{talk.topic}</span><time datetime={talk.date}>{talk.month}</time></div>
+    <h3><a href={`https://www.youtube.com/watch?v=${talk.id}`} target="_blank" rel="noreferrer">{talk.title} <span aria-hidden="true">↗</span></a></h3>
+    <p>{talk.description}</p>
+  </article>)}
+</div>

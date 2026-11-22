@@ -1,0 +1,42 @@
+<div class="sr-only" role="status" aria-live="polite" data-code-status></div>
+<script>
+const status = document.querySelector<HTMLElement>('[data-code-status]');
+document.querySelectorAll<HTMLPreElement>('.prose pre').forEach((pre, index) => {
+  const code = pre.querySelector('code');
+  if (!code || pre.parentElement?.classList.contains('code-block')) return;
+  const block = document.createElement('div');
+  block.className = 'code-block';
+  const toolbar = document.createElement('div');
+  toolbar.className = 'code-toolbar';
+  const language = document.createElement('span');
+  language.textContent = pre.dataset.language || code.className.match(/language-([\w+-]+)/)?.[1] || 'Code';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = 'Copy code';
+  button.setAttribute('aria-label', `Copy code block ${index + 1}`);
+  pre.setAttribute('tabindex', '0');
+  pre.setAttribute('role', 'region');
+  pre.setAttribute('aria-label', `${language.textContent} code block ${index + 1}`);
+  pre.parentNode?.insertBefore(block, pre);
+  toolbar.append(language, button);
+  block.append(toolbar, pre);
+  let resetTimer: ReturnType<typeof setTimeout>;
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(code.textContent || '');
+      button.textContent = 'Copied';
+      if (status) status.textContent = `Code block ${index + 1} copied.`;
+    } catch {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      button.textContent = 'Code selected';
+      if (status) status.textContent = 'Copy was unavailable. The code is selected; use your keyboard to copy.';
+    }
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => { button.textContent = 'Copy code'; }, 2500);
+  });
+});
+</script>

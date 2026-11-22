@@ -1,0 +1,42 @@
+---
+import { render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { getPublishedNotes, articleAuthor } from '../../lib/writing';
+export async function getStaticPaths() {
+  return (await getPublishedNotes()).map(entry => ({ params: { id: entry.id }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const notes = await getPublishedNotes();
+const related = notes.filter(note => note.id !== entry.id && entry.data.related.includes(note.id));
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: entry.data.title,
+  description: entry.data.description,
+  datePublished: entry.data.date.toISOString(),
+  author: entry.data.authors.map(articleAuthor),
+};
+---
+<Layout title={entry.data.title} description={entry.data.description} schema={schema} article>
+  <section class="page-intro container article-intro">
+    <a class="eyebrow" href="/writing/">← WRITING / {entry.data.topic}</a>
+    <h1>{entry.data.title}</h1>
+    <p>{entry.data.description}</p>
+    <div class="case-meta">
+      <span>{entry.data.authors.join(' · ')}</span>
+      <time datetime={entry.data.date.toISOString()}>{entry.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
+    </div>
+  </section>
+  <div class="case-layout container">
+    <aside class="toc" aria-label="Table of contents">
+      <span class="eyebrow">IN THIS ARTICLE</span>
+      {headings.filter(heading => heading.depth === 2).map(heading => <a href={`#${heading.slug}`}>{heading.text}</a>)}
+    </aside>
+    <article class="prose">
+      <Content/>
+      {related.length > 0 && <section class="related-reading"><h2>Related articles</h2><ul>{related.map(note => <li><a href={`/writing/${note.id}/`}>{note.data.title}</a></li>)}</ul></section>}
+      <div class="article-end"><a href="/writing/">← All articles</a><a href="/subscribe/">Subscribe via RSS ↗</a></div>
+    </article>
+  </div>
+</Layout>

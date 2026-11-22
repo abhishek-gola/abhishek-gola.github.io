@@ -1,0 +1,10 @@
+---
+import Arrow from './Arrow.astro';
+const {item,index=0} = Astro.props;
+---
+<article class="work-card" data-filter-item data-tags={item.tags.join('|')} data-search={`${item.title} ${item.description}`}>
+<div class="card-top"><span class="mono">0{index+1} / OPENCV</span><span class="merged"><span></span> MERGED</span></div>
+<div class:list={['card-diagram',`diagram-${index}`]} aria-hidden="true">{index===0?<><span>GRAPH</span><i>→</i><span class="blue">DISPATCH</span><i>→</i><div><span>CPU</span><span>CUDA</span></div></>:index===1?<><span class="faded">CLASSIC</span><i>→</i><span class="blue">ENGINE_NEW</span><i>↗</i></>:<><span>[ n, c, h, w ]</span><i>⇄</i><span class="blue">N-D</span></>}</div>
+<div class="tags">{item.tags.map((t:string)=><span>{t}</span>)}</div><h3><a href={`/opencv/${item.slug}/`}>{item.short}<Arrow/></a></h3><p>{item.description}</p>
+<div class="card-bottom"><span class="mono">PR #{item.number}</span><a href={`/opencv/${item.slug}/`}>Read case study <Arrow/></a></div>
+</article>

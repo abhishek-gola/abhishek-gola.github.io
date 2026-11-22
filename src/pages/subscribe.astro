@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+const origin = import.meta.env.DEV ? Astro.url.origin : Astro.site!;
+const feedUrl = new URL('/rss.xml', origin).href;
+---
+<Layout title="Subscribe via RSS" description="Follow Abhishek Gola’s technical writing in your preferred RSS reader.">
+  <section class="publication-intro reading-container">
+    <span class="eyebrow">FOLLOW NEW ARTICLES</span>
+    <h1>Subscribe via RSS.</h1>
+    <p>RSS is a feed of new articles. Add the address below to an RSS reader, and new posts will appear there automatically.</p>
+  </section>
+  <section class="reading-container subscription-content">
+    <label class="feed-label" for="feed-address">Feed address</label>
+    <div class="feed-controls">
+      <input id="feed-address" type="url" readonly value={feedUrl} spellcheck="false"/>
+      <button class="button primary" type="button" data-copy-feed>Copy feed URL</button>
+    </div>
+    <p class="feed-status" role="status" aria-live="polite" data-feed-status></p>
+    <ol class="feed-instructions">
+      <li>Copy the feed address.</li>
+      <li>In your RSS reader, choose to add or follow a feed.</li>
+      <li>Paste the address to subscribe.</li>
+    </ol>
+    <p class="note">The feed is XML for reader apps; it is not an email newsletter or a normal article page. <a href="/rss.xml" download="abhishek-gola-rss.xml">Download the XML feed</a>.</p>
+    {import.meta.env.DEV && <p class="note">This is a local preview address. It works only on this computer while the preview server is running. A public subscription address will be available when the site is published.</p>}
+    <a class="text-link" href="/writing/" style="margin-top:30px">← Browse the articles</a>
+  </section>
+</Layout>
+<script>
+const copyButton = document.querySelector<HTMLButtonElement>('[data-copy-feed]');
+const address = document.querySelector<HTMLInputElement>('#feed-address');
+const status = document.querySelector<HTMLElement>('[data-feed-status]');
+copyButton?.addEventListener('click', async () => {
+  if (!address || !status) return;
+  try {
+    await navigator.clipboard.writeText(address.value);
+    status.textContent = 'Feed address copied. Paste it into your RSS reader.';
+  } catch {
+    address.focus();
+    address.select();
+    status.textContent = 'The address is selected. Copy it with your keyboard.';
+  }
+});
+</script>

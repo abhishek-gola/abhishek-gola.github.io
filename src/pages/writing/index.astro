@@ -1,0 +1,20 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import WritingList from '../../components/WritingList.astro';
+import Filter from '../../components/Filter.astro';
+import { getPublishedWriting } from '../../lib/writing';
+const entries = await getPublishedWriting();
+const topics = [...new Set(entries.map(entry => entry.topic))];
+---
+<Layout title="Writing" description="Articles on computer vision, inference systems, performance engineering, and 3D perception by Abhishek Gola.">
+  <section class="publication-intro reading-container archive-intro">
+    <span class="eyebrow">ARTICLES & TECHNICAL NOTES</span>
+    <h1>Writing.</h1>
+    <p>Computer vision, performance, and the engineering decisions in between. Published here and elsewhere, with original author credits.</p>
+  </section>
+  <section class="reading-container publication-section archive-content">
+    {(topics.length > 1 || entries.length > 5) && <Filter categories={topics.length > 1 ? topics : []} search={entries.length > 5}/>}
+    <WritingList/>
+    <p class="note">External articles open at their original publication. The AWS article is also listed in <a href="https://aws.amazon.com/blogs/spatial/category/compute/graviton/">the publisher’s archive</a> if its original link is unavailable.</p>
+  </section>
+</Layout>
