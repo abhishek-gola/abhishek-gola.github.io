@@ -21,6 +21,10 @@ for (const path of files('src/content/writing').filter(path => /\.mdx?$/.test(pa
 for (const page of pages) {
   const html = readFileSync(page, 'utf8');
   assert(html.includes('rel="canonical"'), `${page} lacks a canonical URL`);
+  const canonical = html.match(/rel="canonical" href="([^"]+)"/);
+  assert(canonical, `${page} lacks a readable canonical URL`);
+  const expectedPath = '/' + page.replace(/^dist\//, '').replace(/index\.html$/, '');
+  assert.equal(new URL(canonical[1]).pathname, expectedPath, `${page} has an incorrect canonical path`);
   for (const [, url] of html.matchAll(/(?:href|src)="(\/[^"#?]*)/g)) {
     if (url.startsWith('//')) continue;
     const path = decodeURIComponent(url).replace(/^\//, '');
