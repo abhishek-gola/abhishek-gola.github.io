@@ -1,0 +1,17 @@
+Compiler: Apple LLVM 21.0.0 (clang-2100.1.1.101)
+C++: 202002
+hardware_concurrency hint: 10
+10 shuffled rounds; 100 observations/block; 20 warmups/block
+Empty dispatch: zero tasks, all configured workers acknowledge completion
+Attention: B=1 H=8 Lq=1 Dk=Dv=64; Lk=16,64,2048; 8 tasks
+workers=0: inline attention, no pool
+Timing: dispatch/control OR complete attention; creation and I/O excluded
+Chip: Apple M5
+Total Number of Cores: 10 (4 Performance and 6 Efficiency)
+Memory: 16 GB
+OS: macOS 26.6.2 (25G83), arm64
+Build: clang++ -O3 -std=c++20 -pthread examples/sharing_benchmark.cpp
+Run date: 2026-11-22; shared desktop, default OS scheduling and power management
+Worker placement and CPU frequency not recorded
+Ten score-scratch buffers preallocated per attention job for up to ten workers
+ASan check: all three shapes at 1,2,4,6,8,10 workers, 20 repetitions each, passed

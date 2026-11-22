@@ -1,0 +1,21 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { Content, getHeadings } from '../../../data/thread-article-methods.md';
+const headings = getHeadings();
+const article = '/writing/why-more-cpu-threads-can-make-inference-slower/';
+---
+<Layout title="CPU thread benchmarks: sources and methods" description="Source attribution, timing boundaries, hardware, numerical validation and reproduction steps for the CPU threading article.">
+  <section class="page-intro container article-intro">
+    <a class="eyebrow" href={article}>BACK TO THE ARTICLE</a>
+    <h1>Sources and benchmark methods.</h1>
+    <p>Implementation evidence, raw measurements and reproducible checks behind “Why More CPU Threads Can Make Inference Slower.”</p>
+    <div class="case-meta"><span>Abhishek Gola</span><time datetime="2026-11-22">November 22, 2026</time></div>
+  </section>
+  <div class="case-layout container">
+    <aside class="toc" aria-label="Table of contents">
+      <span class="eyebrow">METHODS & SOURCES</span>
+      {headings.filter(heading => heading.depth === 2).map(heading => <a href={`#${heading.slug}`}>{heading.text}</a>)}
+    </aside>
+    <article class="prose"><Content/><div class="article-end"><a href={article}>Back to the article</a><a href="/articles/why-more-cpu-threads-can-make-inference-slower.zip">Download source package</a></div></article>
+  </div>
+</Layout>

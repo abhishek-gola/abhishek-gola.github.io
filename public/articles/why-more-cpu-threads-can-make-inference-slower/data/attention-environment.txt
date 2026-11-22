@@ -1,0 +1,14 @@
+Compiler: Apple LLVM 21.0.0 (clang-2100.1.1.101)
+C++: 202002
+hardware_concurrency hint: 10
+B=1 H=8 Dk=Dv=64; query tile=32; unmasked; no dropout
+10 shuffled rounds, 100 samples/block, 20 warmups/block
+Timing: inline attention OR persistent-pool dispatch + attention + completion wait
+CPU: Apple M5; 10 cores (4 Performance, 6 Efficiency), verified with system_profiler
+Memory: 16 GB
+OS: macOS 26.6.2 (25G83), arm64
+Build: clang++ -O3 -std=c++20 -pthread examples/attention_benchmark.cpp
+Run date: 2026-11-22; shared desktop; default OS scheduling and power management
+Worker-to-core placement was not recorded; no per-core pinning was used
+Inputs, outputs and per-worker score scratch preallocated and reused
+workers=0 encodes inline execution on the caller with no pool
